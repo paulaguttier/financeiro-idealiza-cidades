@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idealiza Cidades — Seehaus Acompanhamento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f5;
+  color: #1e293b;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* =========== PASSWORD =========== */
+#pw-overlay {
+  position: fixed; inset: 0;
+  background: #0d1b2a;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 8px;
+}
+.pw-logo { color: #fff; font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; }
+.pw-sub  { color: #94a3b8; font-size: 0.8rem; margin-bottom: 28px; }
+.pw-card {
+  background: #fff; border-radius: 12px;
+  padding: 36px 40px; width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.pw-card h2 { font-size: 1rem; color: #1e293b; margin-bottom: 20px; font-weight: 600; text-align:center; }
+#pw-input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.95rem; color: #1e293b; background: #f8fafc;
+  outline: none; text-align: center; letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+#pw-input:focus { border-color: #3b82f6; background: #fff; }
+#pw-btn {
+  width: 100%; padding: 11px;
+  background: #1d4ed8; color: #fff; border: none;
+  border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; transition: background 0.2s; letter-spacing: 0.5px;
+}
+#pw-btn:hover { background: #1e40af; }
+#pw-err { color: #ef4444; font-size: 0.8rem; text-align: center; margin-top: 10px; min-height: 18px; }
+
+/* =========== LAYOUT =========== */
+#app { display: none; }
+.header {
+  background: #0d1b2a;
+  padding: 0 24px;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.header-brand { display: flex; align-items: baseline; gap: 10px; }
+.header-brand .company { color: #fff; font-weight: 700; font-size: 1rem; }
+.header-brand .product { color: #94a3b8; font-size: 0.8rem; }
+.header-date { color: #94a3b8; font-size: 0.75rem; }
+
+.layout { display: flex; height: calc(100vh - 52px); overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.sb-section { padding: 0 16px 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 4px; }
+.sb-label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+.sb-btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.sb-btn {
+  padding: 5px 10px; border-radius: 6px; border: 1.5px solid #e2e8f0;
+  font-size: 0.75rem; font-weight: 500; color: #64748b;
+  background: #fff; cursor: pointer; transition: all 0.15s;
+}
+.sb-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+.sb-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.sb-project {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px;
+  font-size: 0.78rem; color: #334155; cursor: pointer;
+  transition: background 0.1s;
+}
+.sb-project:hover { background: #f1f5f9; }
+.sb-project input { accent-color: #3b82f6; cursor: pointer; width: 14px; height: 14px; }
+.sb-project .proj-name { flex: 1; }
+.sb-project .proj-tag { font-size: 0.6rem; background: #e2e8f0; color: #64748b; padding: 1px 5px; border-radius: 3px; }
+.sb-search {
+  width: 100%; padding: 7px 10px; border: 1.5px solid #e2e8f0;
+  border-radius: 6px; font-size: 0.78rem; color: #334155;
+  background: #f8fafc; outline: none; margin-bottom: 8px;
+}
+.sb-search:focus { border-color: #3b82f6; }
+.sb-actions { display: flex; gap: 6px; margin-bottom: 10px; }
+.sb-action-btn { font-size: 0.7rem; color: #3b82f6; border: none; background: none; cursor: pointer; padding: 0; }
+.sb-action-btn:hover { text-decoration: underline; }
+
+/* MAIN CONTENT */
+.main {
+  flex: 1; overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* PAGE TITLE */
+.page-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.page-title h1 { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+.page-title .sel-count { font-size: 0.75rem; color: #64748b; }
+
+/* KPI CARDS */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.kpi-card .kpi-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-weight: 500; }
+.kpi-card .kpi-value { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.kpi-card .kpi-sub { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+.kpi-green { color: #16a34a; }
+.kpi-red   { color: #dc2626; }
+.kpi-blue  { color: #1d4ed8; }
+.kpi-dark  { color: #0f172a; }
+.kpi-badge {
+  display: inline-block; font-size: 0.62rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px; margin-top: 6px; letter-spacing: 0.5px;
+}
+.badge-green { background: #dcfce7; color: #16a34a; }
+.badge-blue  { background: #dbeafe; color: #1d4ed8; }
+.badge-amber { background: #fef3c7; color: #d97706; }
+.badge-gray  { background: #f1f5f9; color: #475569; }
+
+/* SECTION */
+.section { margin-bottom: 20px; }
+.section-title {
+  font-size: 0.85rem; font-weight: 700; color: #0f172a;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+/* CHART CARDS */
+.chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.chart-card {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.chart-head .ct { font-size: 0.8rem; font-weight: 600; color: #1e293b; }
+.chart-head .cs { font-size: 0.68rem; color: #94a3b8; }
+.chart-wrap { position: relative; }
+.h220 { height: 220px; }
+.h260 { height: 260px; }
+.h180 { height: 180px; }
+
+/* HORIZONTAL BARS */
+.hbar { margin-bottom: 10px; }
+.hbar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.hbar-name { font-size: 0.72rem; color: #334155; width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbar-track { flex: 1; background: #f1f5f9; border-radius: 4px; height: 7px; overflow: hidden; }
+.hbar-fill  { height: 100%; border-radius: 4px; background: #3b82f6; }
+.hbar-val   { font-size: 0.68rem; color: #475569; width: 80px; text-align: right; flex-shrink: 0; }
+
+/* PREMISSAS TABLE */
+.prem-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.prem-table th {
+  background: #f8fafc; padding: 9px 12px;
+  text-align: left; font-size: 0.68rem; font-weight: 700;
+  color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+.prem-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+.prem-table tr:last-child td { border-bottom: none; }
+.prem-table td:last-child { font-weight: 600; color: #0f172a; text-align: right; }
+.prem-table tr:hover td { background: #f8fafc; }
+
+/* FOOTER */
+.footer {
+  text-align: center; padding: 20px; color: #94a3b8;
+  font-size: 0.72rem; border-top: 1px solid #e2e8f0;
+  margin-top: 8px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid-2 { grid-template-columns: 1fr; }
+  .chart-grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD -->
+<div id="pw-overlay">
+  <div class="pw-logo">Idealiza Cidades</div>
+  <div class="pw-sub">Acompanhamento de Viabilidade</div>
+  <div class="pw-card">
+    <h2>Acesso Restrito</h2>
+    <input type="password" id="pw-input" placeholder="Senha de acesso" autocomplete="off">
+    <button id="pw-btn" onclick="checkPw()">Entrar</button>
+    <div id="pw-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-brand">
+      <span class="company">Idealiza Cidades</span>
+      <span class="product">Dashboard de Acompanhamento de Viabilidade</span>
+    </div>
+    <div class="header-date">Atualizado em Dez/2025</div>
+  </div>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Período</div>
+        <div class="sb-btn-group">
+          <button class="sb-btn active" onclick="setPeriodo(this,'futuro')">Futuro</button>
+          <button class="sb-btn" onclick="setPeriodo(this,'todos')">Todos</button>
+        </div>
+      </div>
+
+      <div class="sb-section" style="border-bottom:none;">
+        <div class="sb-label">Empreendimentos</div>
+        <input class="sb-search" type="text" placeholder="Buscar empreendimento..." id="projSearch" oninput="filterProj()">
+        <div class="sb-actions">
+          <button class="sb-action-btn" onclick="selectAll(true)">Selecionar Todos</button>
+          <button class="sb-action-btn" onclick="selectAll(false)">Limpar</button>
+        </div>
+        <div id="projList">
+          <div class="sb-project" data-name="Seehaus">
+            <input type="checkbox" checked id="cb_seehaus">
+            <span class="proj-name">Seehaus</span>
+            <span class="proj-tag">GAS</span>
+          </div>
+          <!-- Novos empreendimentos serão adicionados aqui -->
+        </div>
+        <div style="font-size:0.65rem;color:#94a3b8;margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0;">
+          Outros empreendimentos serão adicionados aqui conforme as planilhas forem disponibilizadas.
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <div class="page-title">
+        <h1>Seehaus — Gaspar / SC &nbsp;·&nbsp; ACP Seehaus Incorporação SPE Ltda.</h1>
+        <span class="sel-count">1 empreendimento selecionado</span>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">VGV Total Nominal</div>
+          <div class="kpi-value kpi-green">R$ 284,1M</div>
+          <div class="kpi-sub">Projeção — 410 unidades lançadas</div>
+          <span class="kpi-badge badge-gray">NOMINAL</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Lucro Projetado</div>
+          <div class="kpi-value kpi-green">R$ 120,1M</div>
+          <div class="kpi-sub">Margem nominal de 42,3%</div>
+          <span class="kpi-badge badge-green">RENTÁVEL</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">TIR do Investidor</div>
+          <div class="kpi-value kpi-blue">26,0% a.a.</div>
+          <div class="kpi-sub">1,945% a.m. &nbsp;·&nbsp; Metodologia ACP</div>
+          <span class="kpi-badge badge-green">ACIMA DA META</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Múltiplo</div>
+          <div class="kpi-value kpi-dark">4,86×</div>
+          <div class="kpi-sub">Distribuições / Aportes dos investidores</div>
+          <span class="kpi-badge badge-blue">RETORNO</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Exposição Máxima</div>
+          <div class="kpi-value kpi-red">R$ 31,1M</div>
+          <div class="kpi-sub">Total de aportes na SPE</div>
+          <span class="kpi-badge badge-amber">CAPITAL</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">VGV Contratado</div>
+          <div class="kpi-value kpi-green">R$ 111,9M</div>
+          <div class="kpi-sub">219 un. &nbsp;·&nbsp; 53,4% das 410 lançadas</div>
+          <span class="kpi-badge badge-amber">REALIZADO</span>
+        </div>
+      </div>
+
+      <!-- FLUXO DE CAIXA -->
+      <div class="section">
+        <div class="section-title">Fluxo de Caixa — Seehaus SPE</div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="ct">Receitas, Desembolsos e Saldo Acumulado (R$ MM)</span>
+            <span class="cs">Valores nominais</span>
+          </div>
+          <div class="chart-wrap h260">
+            <canvas id="chartCashflow"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- VENDAS + VSO -->
+      <div class="section">
+        <div class="section-title">Vendas &amp; Absorção</div>
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">VGV Mensal e % Acumulado de Vendas</span>
+              <span class="cs">Realizado até Dez/2025</span>
+            </div>
+            <div class="chart-wrap h220">
+              <canvas id="chartVendas"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">VSO — Velocidade de Vendas Mensal</span>
+              <span class="cs">Unidades vendidas e % absorção</span>
+            </div>
+            <div class="chart-wrap h220">
+              <canvas id="chartVso"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OBRA -->
+      <div class="section">
+        <div class="section-title">Evolução da Obra</div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="ct">Previsto × Realizado (%)</span>
+            <span class="cs">Cronograma físico</span>
+          </div>
+          <div class="chart-wrap h220">
+            <canvas id="chartObra"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUSTOS -->
+      <div class="section">
+        <div class="section-title">Custos por Categoria</div>
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">Verba de Marketing</span>
+              <span class="cs">Total: R$ 8.0M realizado</span>
+            </div>
+            <div id="mktBars" style="margin-top:4px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">Despesas de Licenciamento</span>
+              <span class="cs">Total: R$ 4.8M realizado</span>
+            </div>
+            <div id="licBars" style="margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREMISSAS -->
+      <div class="section">
+        <div class="section-title">Premissas do Projeto</div>
+        <div class="chart-card">
+          <table class="prem-table">
+            <thead>
+              <tr>
+                <th>Parâmetro</th>
+                <th>Descrição</th>
+                <th style="text-align:right;">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>VGV Tabela a Vista</td><td>Valor Geral de Vendas das 191 un. a vista (tabela atual)</td><td>R$ 136.255.010</td></tr>
+              <tr><td>Ticket Médio a Vista</td><td>VGV tabela a vista / 191 unidades</td><td>R$ 713.377</td></tr>
+              <tr><td>Lançamento</td><td>Data de lançamento do empreendimento</td><td>Agosto / 2021</td></tr>
+              <tr><td>Total de Unidades</td><td>Total lançado (todas as fases)</td><td>410 unidades</td></tr>
+              <tr><td>Unidades Remanescentes</td><td>Estoque disponível em Dez/2025</td><td>114 unidades</td></tr>
+              <tr><td>Término Previsto</td><td>Previsão de conclusão das obras</td><td>Março / 2029</td></tr>
+              <tr><td>TIR Meta</td><td>Taxa Interna de Retorno mínima esperada</td><td>20,0% a.a.</td></tr>
+              <tr><td>TIR Calculada</td><td>Metodologia ACP com inflação de 8% a.a.</td><td>26,0% a.a.</td></tr>
+              <tr><td>Taxa de Desconto VP</td><td>Taxa utilizada para cálculo de valor presente</td><td>12,0% a.a.</td></tr>
+              <tr><td>VGV Total Nominal</td><td>Projeção total de receitas nominais (410 un.)</td><td>R$ 284.113.556</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="footer">
+        Idealiza Cidades &nbsp;·&nbsp; Seehaus — ACP Seehaus Incorporação SPE Ltda. &nbsp;·&nbsp; Uso interno &nbsp;·&nbsp; Dezembro 2025
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<script>
+// ---- AUTH ----
+function checkPw() {
+  if (document.getElementById('pw-input').value === '#1d34l1z4!') {
+    document.getElementById('pw-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initAll();
+  } else {
+    document.getElementById('pw-err').textContent = 'Senha incorreta. Tente novamente.';
+    document.getElementById('pw-input').value = '';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
+
+// ---- SIDEBAR ----
+function setPeriodo(btn, val) {
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function selectAll(v) {
+  document.querySelectorAll('#projList input[type=checkbox]').forEach(cb => cb.checked = v);
+}
+function filterProj() {
+  var q = document.getElementById('projSearch').value.toLowerCase();
+  document.querySelectorAll('#projList .sb-project').forEach(p => {
+    p.style.display = p.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ---- DATA ----
+const vendasLabels = ["2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"];
+const vendasVgv    = [3.146, 2.151, 0.0, 2.207, 0.29, 0.777, 0.393, 1.021, 3.617, 1.228, 0.51, 1.099, 0.0, 1.191, 0.433, 0.774, 0.835, 0.0, 0.341, 0.46, 0.398, 0.963, 0.996, 0.597, 0.73, 0.0, 0.462, 0.602, 1.78, 1.598, 0.686, 4.324, 2.374, 3.196, 1.779, 0.372, 1.583, 1.235, 1.377, 1.104, 0.0, 0.739, 4.336, 1.478, 3.061, 2.276, 2.829, 1.277, 5.278, 0.0];
+const vendasAcum   = [41.0, 43.0, 43.0, 45.0, 45.2, 46.0, 46.3, 47.2, 50.5, 51.6, 52.1, 53.1, 53.1, 54.2, 54.6, 55.3, 56.1, 56.1, 56.4, 56.8, 57.1, 58.0, 58.9, 59.5, 60.2, 60.2, 60.6, 61.1, 62.7, 64.2, 64.8, 68.8, 70.9, 73.8, 75.4, 75.8, 77.2, 78.4, 79.6, 80.6, 80.6, 81.3, 85.2, 86.6, 89.4, 91.5, 94.0, 95.2, 100, 100];
+
+const vsoLabels   = ["2021-10", "2021-11", "2021-12", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-12", "2023-01", "2023-02", "2023-03", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11", "2026-12", "2027-01", "2027-02", "2027-03", "2027-04", "2027-05", "2027-06", "2027-07", "2027-08", "2027-09", "2027-10", "2027-11", "2027-12", "2028-01", "2028-02", "2028-03", "2028-04", "2028-05", "2028-06", "2028-07", "2028-08", "2028-09", "2028-10", "2028-11", "2028-12", "2029-01", "2029-02"];
+const vsoVendidas = [111, 9, 5, 7, 1, 2, 1, 3, 9, 3, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 3, 3, 1, 7, 4, 5, 3, 1, 3, 2, 2, 2, 1, 5, 2, 5, 3, 5, 2, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+const vsoPct      = [31.4, 3.7, 2.1, 3.1, 0.5, 0.9, 0.5, 1.4, 4.2, 1.5, 0.5, 1.0, 1.0, 0.5, 1.0, 1.0, 0.5, 0.5, 0.5, 1.1, 1.1, 0.5, 1.1, 0.6, 0.6, 1.7, 1.7, 0.6, 4.0, 2.4, 3.1, 1.9, 0.7, 2.0, 1.3, 1.4, 1.4, 0.7, 3.5, 1.4, 3.7, 2.3, 3.9, 1.6, 5.8, 2.6, 2.7, 2.8, 2.9, 2.9, 3.0, 3.1, 3.2, 3.3, 3.5, 3.6, 3.7, 3.9, 4.0, 4.2, 4.3, 4.5, 4.8, 5.0, 5.3, 5.6, 5.9, 6.2, 6.7, 7.1, 7.7, 8.3, 9.1, 10.0, 11.1, 12.5, 14.3, 16.7, 20.0, 25.0, 33.3, 50.0, null];
+
+const obraLabels = ["2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"];
+const obraPrev   = [1.01, 2.76, 7.72, 10.19, 12.62, 15.54, 18.46, 20.06, 22.19, 24.79, 27.2, 30.51, 33.28, 36.05, 38.2, 41.08, 43.6, 46.22, 48.32, 50.29, 52.28, 54.8, 56.83, 58.71, 60.2, 61.71, 64.33, 67.07, 70.17, 73.15, 75.95, 78.76, 81.64, 84.58, 87.41, 90.3, 93.58, 96.42, 98.84, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const obraReal   = [0.74, 1.56, 2.33, 2.51, 2.87, 3.09, 3.8, 4.53, 5.99, 6.56, 7.71, 7.83, 8.38, 8.55, 8.96, 9.91, 10.73, 11.66, 13.62, 15.6, 18.15, 19.78, 22.08, 23.79, 25.93, 27.27, 29.87, 32.52, 33.92, 36.04, 37.73, 38.78, 40.39, 42.23, 43.04, 44.0, 45.53, 46.68, 48.12, 49.23, 51.03, 52.54, 53.72, 55.67, 57.12, 58.45, 60.01, 62.53, 64.22, 65.88, 68.35, 69.02, 70.45, 76.27, 80.3, 84.33, 88.36, 92.39, 96.42, 98.96, 99.48, 100];
+
+const cfLabels = ["2021-01", "2021-03", "2021-05", "2021-07", "2021-09", "2021-11", "2022-01", "2022-03", "2022-05", "2022-07", "2022-09", "2022-11", "2023-01", "2023-03", "2023-05", "2023-07", "2023-09", "2023-11", "2024-01", "2024-03", "2024-05", "2024-07", "2024-09", "2024-11", "2025-01", "2025-03", "2025-05", "2025-07", "2025-09", "2025-11", "2026-01", "2026-03", "2026-05", "2026-07", "2026-09", "2026-11", "2027-01", "2027-03", "2027-05", "2027-07", "2027-09", "2027-11", "2028-01", "2028-03", "2028-05", "2028-07", "2028-09", "2028-11", "2029-01", "2029-03", "2029-05", "2029-07", "2029-09", "2029-11", "2030-01", "2030-03", "2030-05", "2030-07", "2030-09", "2030-11", "2031-01", "2031-03", "2031-05", "2031-07", "2031-09", "2031-11", "2032-01", "2032-03", "2032-05", "2032-07", "2032-09", "2032-11", "2033-01", "2033-03", "2033-05", "2033-07", "2033-09", "2033-11", "2034-01", "2034-03", "2034-05", "2034-07", "2034-09", "2034-11", "2035-01", "2035-03", "2035-05", "2035-07", "2035-09", "2035-11", "2036-01"];
+const cfRec    = [0.0, 0.0, 0.0, 0.0, 5.28, 2.301, 0.956, 0.968, 0.972, 1.96, 1.148, 0.855, 0.929, 0.795, 1.006, 0.797, 0.831, 0.978, 0.946, 0.779, 0.734, 1.752, 0.881, 1.009, 0.687, 0.736, 0.834, 1.487, 1.019, 0.847, 1.091, 4.017, 1.74, 5.385, 3.63, 1.842, 3.039, 1.309, 2.052, 3.034, 2.666, 1.887, 2.137, 1.842, 2.082, 2.076, 2.165, 2.293, 2.382, 2.495, 2.644, 2.742, 2.84, 2.975, 3.157, 3.026, 3.255, 3.068, 3.061, 3.097, 2.772, 2.668, 2.598, 2.664, 2.346, 2.245, 2.058, 1.947, 1.87, 1.738, 1.607, 1.496, 1.378, 1.256, 1.177, 1.024, 0.905, 0.79, 0.675, 0.559, 0.477, 0.314, 0.196, 0.077, 0.017, 0.017, 0.017, 0.01, 0.01, 0.038, 0.0];
+const cfDesemb = [0.0, 0.0, 0.0, 0.0, 0.0, 0.734, 0.427, 0.198, 0.657, 0.587, 0.111, 0.154, 0.933, 0.836, 1.784, 1.516, 1.545, 1.203, 2.463, 1.905, 0.946, 1.738, 0.87, 1.034, 1.075, 1.359, 1.759, 1.283, 2.278, 1.495, 0.696, 5.244, 3.63, 3.806, 2.282, 0.47, 0.188, 0.0, 0.0, 0.205, 0.0, 0.0, 0.171, 0.0, 0.0, 0.189, 0.0, 0.0, 0.217, 0.0, 0.0, 0.244, 0.0, 0.0, 0.277, 0.0, 0.0, 0.288, 0.0, 0.0, 0.288, 0.0, 0.0, 0.233, 0.0, 0.0, 0.201, 0.0, 0.0, 0.167, 0.0, 0.0, 0.134, 0.0, 0.0, 0.101, 0.0, 0.0, 0.068, 0.0, 0.0, 0.036, 0.0, 0.0, 0.006, 0.0, 0.0, 0.001, 0.0, 0.0, 0.001];
+const cfSaldo  = [-0.013, -0.045, -0.076, -0.076, 4.428, -0.24, 0.135, 0.485, -0.011, 1.114, 0.705, 0.244, -0.447, -0.47, -1.209, -1.152, -1.18, -0.623, -1.995, -1.66, -0.717, -0.73, -0.694, -0.412, -0.823, -1.123, -1.421, -0.336, -1.799, -1.279, 0.066, -1.644, -2.162, 1.276, 1.074, 1.084, 2.585, 1.041, 1.799, 2.549, 2.324, 1.645, 1.707, 1.597, 1.831, 1.623, 1.908, 2.027, 1.891, 2.226, 2.371, 2.211, 2.558, 2.686, 2.584, 2.735, 2.964, 2.482, 2.769, 2.799, 2.238, 2.438, 2.502, 2.337, 2.257, 2.161, 1.778, 1.873, 1.799, 1.505, 1.546, 1.439, 1.189, 1.207, 1.133, 0.882, 0.87, 0.759, 0.579, 0.535, 0.458, 0.263, 0.186, 0.072, 0.009, 0.016, 0.016, 0.008, 0.009, 0.038, -0.001];
+
+const mktCats = ["PDV", "Eventos", "Mídias", "Agências e assessorias", "Fretamento avião mais viagens equipe", "Honorários equipe PJ", "Manutenção de vendas", "Maquete", "Campanhas", "Materiais de apoio + Manuais"];
+const mktVals = [2326.1, 1201.7, 1150.4, 1141.0, 654.6, 627.5, 455.1, 155.8, 142.4, 138.0];
+const licCats = ["Estudos urbanísitcos e ambientais", "Projetos", "Viagens", "Impostos e taxas", "Laudos", "Honorários equipe", "Taxas RI", "Despesas adm"];
+const licVals = [1980.6, 1899.1, 612.5, 159.8, 136.7, 53.9, 3.8, 0.0];
+
+// ---- CHART DEFAULTS ----
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#64748b';
+
+const GRID  = 'rgba(0,0,0,0.06)';
+const BLUE  = '#3b82f6';
+const GREEN = '#16a34a';
+const RED   = '#dc2626';
+const AMBER = '#f59e0b';
+const TEAL  = '#0ea5e9';
+const NAVY  = '#1e3a5f';
+
+function ttStyle() {
+  return {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+    borderWidth: 1,
+    titleColor: '#f1f5f9',
+    bodyColor: '#cbd5e1',
+    padding: 10,
+    cornerRadius: 6,
+    displayColors: true
+  };
+}
+
+function xScale(maxTicks) {
+  return { grid: { color: GRID }, ticks: { maxRotation: 45, maxTicksLimit: maxTicks || 12 } };
+}
+function yScale(lbl) {
+  return { grid: { color: GRID }, title: { display: !!lbl, text: lbl, color: '#94a3b8', font: { size: 10 } } };
+}
+function y2Scale(lbl, cb) {
+  return {
+    position: 'right',
+    grid: { drawOnChartArea: false },
+    title: { display: !!lbl, text: lbl, color: '#94a3b8', font: { size: 10 } },
+    ticks: { callback: cb || (v => v) }
+  };
+}
+
+function initAll() {
+
+  // ---- CASHFLOW ----
+  new Chart(document.getElementById('chartCashflow'), {
+    data: {
+      labels: cfLabels,
+      datasets: [
+        {
+          type: 'line', label: 'Saldo Final (R$ MM)',
+          data: cfSaldo, borderColor: BLUE,
+          backgroundColor: ctx => {
+            var g = ctx.chart.ctx.createLinearGradient(0,0,0,260);
+            g.addColorStop(0,'rgba(59,130,246,0.15)');
+            g.addColorStop(1,'rgba(59,130,246,0.01)');
+            return g;
+          },
+          fill: true, pointRadius: 0, borderWidth: 2.5, tension: 0.35, yAxisID: 'y', order: 1
+        },
+        {
+          type: 'bar', label: 'Receitas (R$ MM)',
+          data: cfRec, backgroundColor: 'rgba(22,163,74,0.55)',
+          borderColor: 'rgba(22,163,74,0.8)', borderWidth: 1,
+          borderRadius: 2, yAxisID: 'y', order: 2
+        },
+        {
+          type: 'bar', label: 'Desembolsos (R$ MM)',
+          data: cfDesemb, backgroundColor: 'rgba(220,38,38,0.45)',
+          borderColor: 'rgba(220,38,38,0.7)', borderWidth: 1,
+          borderRadius: 2, yAxisID: 'y', order: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+        tooltip: {
+          ...ttStyle(),
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: R$ ${ctx.parsed.y.toFixed(2)}M`
+          }
+        }
+      },
+      scales: {
+        x: xScale(12),
+        y: yScale('R$ MM')
+      }
+    }
+  });
+
+  // ---- VENDAS ----
+  // Thin out data
+  var step = Math.max(1, Math.floor(vendasLabels.length / 36));
+  var vL = [], vV = [], vA = [];
+  for (var i = 0; i < vendasLabels.length; i += step) {
+    vL.push(vendasLabels[i]); vV.push(vendasVgv[i]); vA.push(vendasAcum[i]);
+  }
+  new Chart(document.getElementById('chartVendas'), {
+    data: {
+      labels: vL,
+      datasets: [
+        {
+          type: 'bar', label: 'VGV Mensal (R$ MM)',
+          data: vV, yAxisID: 'y',
+          backgroundColor: ctx => vL[ctx.dataIndex] <= '2025-12' ? 'rgba(30,62,127,0.75)' : 'rgba(245,158,11,0.6)',
+          borderRadius: 3, order: 2
+        },
+        {
+          type: 'line', label: 'Acumulado (%)',
+          data: vA, yAxisID: 'y2',
+          borderColor: GREEN, backgroundColor: 'transparent',
+          pointRadius: 0, borderWidth: 2, tension: 0.3, order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
+        tooltip: ttStyle()
+      },
+      scales: { x: xScale(10), y: yScale('R$ MM'), y2: y2Scale('%', v => v+'%') }
+    }
+  });
+
+  // ---- VSO ----
+  new Chart(document.getElementById('chartVso'), {
+    data: {
+      labels: vsoLabels,
+      datasets: [
+        {
+          type: 'bar', label: 'Unidades Vendidas',
+          data: vsoVendidas, yAxisID: 'y',
+          backgroundColor: ctx => vsoLabels[ctx.dataIndex] <= '2025-12' ? 'rgba(30,62,127,0.75)' : 'rgba(245,158,11,0.6)',
+          borderRadius: 3, order: 2
+        },
+        {
+          type: 'line', label: 'VSO % Mensal',
+          data: vsoPct, yAxisID: 'y2',
+          borderColor: AMBER, backgroundColor: 'transparent',
+          pointRadius: 3, pointBackgroundColor: AMBER,
+          borderWidth: 2, tension: 0.3, spanGaps: true, order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
+        tooltip: ttStyle()
+      },
+      scales: { x: xScale(10), y: yScale('Unidades'), y2: y2Scale('%', v => v+'%') }
+    }
+  });
+
+  // ---- OBRA ----
+  new Chart(document.getElementById('chartObra'), {
+    data: {
+      labels: obraLabels,
+      datasets: [
+        {
+          type: 'line', label: 'Previsto (%)',
+          data: obraPrev,
+          borderColor: '#94a3b8', backgroundColor: 'transparent',
+          pointRadius: 0, borderWidth: 1.5, borderDash: [5,3], tension: 0.3
+        },
+        {
+          type: 'line', label: 'Realizado (%)',
+          data: obraReal,
+          borderColor: BLUE, backgroundColor: 'rgba(59,130,246,0.06)',
+          fill: true, pointRadius: 2, pointBackgroundColor: BLUE,
+          borderWidth: 2, tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
+        tooltip: {
+          ...ttStyle(),
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` }
+        }
+      },
+      scales: { x: xScale(10), y: yScale('%') }
+    }
+  });
+
+  // ---- HORIZONTAL BARS ----
+  function renderBars(containerId, cats, vals) {
+    var el = document.getElementById(containerId);
+    var max = Math.max(...vals);
+    cats.forEach((cat, i) => {
+      var pct = (vals[i] / max * 100).toFixed(0);
+      var valStr = 'R$\u00a0' + vals[i].toLocaleString('pt-BR', {minimumFractionDigits:0}) + ' mil';
+      el.innerHTML += `<div class="hbar">
+        <div class="hbar-row">
+          <span class="hbar-name" title="${cat}">${cat}</span>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%"></div></div>
+          <span class="hbar-val">${valStr}</span>
+        </div>
+      </div>`;
+    });
+  }
+  renderBars('mktBars', mktCats, mktVals);
+  renderBars('licBars', licCats, licVals);
+}
+</script>
+</body>
+</html>
