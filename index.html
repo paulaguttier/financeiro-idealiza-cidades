@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Idealiza Cidades — Seehaus Acompanhamento</title>
+<title>Idealiza Cidades — Seehaus Home Resort</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -117,6 +117,7 @@ body {
   margin-bottom: 20px;
 }
 .page-title h1 { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+.page-title .sel-count { font-size: 0.75rem; color: a; }
 .page-title .sel-count { font-size: 0.75rem; color: #64748b; }
 
 /* KPI CARDS */
@@ -278,7 +279,7 @@ body {
     <div class="main">
 
       <div class="page-title">
-        <h1>Seehaus — Gaspar / SC &nbsp;·&nbsp; ACP Seehaus Incorporação SPE Ltda.</h1>
+        <h1>Seehaus Home Resort</h1>
         <span class="sel-count">1 empreendimento selecionado</span>
       </div>
 
@@ -298,8 +299,8 @@ body {
         </div>
         <div class="kpi-card">
           <div class="kpi-label">TIR do Investidor</div>
-          <div class="kpi-value kpi-blue">26,0% a.a.</div>
-          <div class="kpi-sub">1,945% a.m. &nbsp;·&nbsp; Metodologia ACP</div>
+          <div class="kpi-value kpi-blue">25,84% a.a.</div>
+          <div class="kpi-sub">1,932% a.m. &nbsp;·&nbsp; Metodologia ACP</div>
           <span class="kpi-badge badge-green">ACIMA DA META</span>
         </div>
         <div class="kpi-card">
@@ -324,11 +325,11 @@ body {
 
       <!-- FLUXO DE CAIXA -->
       <div class="section">
-        <div class="section-title">Fluxo de Caixa — Seehaus SPE</div>
+        <div class="section-title">Fluxo de Caixa Executado — Seehaus SPE</div>
         <div class="chart-card">
           <div class="chart-head">
-            <span class="ct">Receitas, Desembolsos e Saldo Acumulado (R$ MM)</span>
-            <span class="cs">Valores nominais</span>
+            <span class="ct">Receitas, Desembolsos e Saldo Final (R$ MM)</span>
+            <span class="cs">Executado out/2021 a fev/2026 · Projetado mar/2026</span>
           </div>
           <div class="chart-wrap h260">
             <canvas id="chartCashflow"></canvas>
@@ -396,6 +397,57 @@ body {
         </div>
       </div>
 
+      <!-- INADIMPLÊNCIA -->
+      <div class="section">
+        <div class="section-title">Inadimpl&#234;ncia — Posi&#231;&#227;o Mar/2026</div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Contratos Inadimplentes</div>
+            <div class="kpi-value kpi-red">24</div>
+            <div class="kpi-sub">de 306 t&#237;tulos a receber</div>
+            <span class="kpi-badge badge-amber">7,8% DOS T&#205;TULOS</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Valor Inadimplente (VGV)</div>
+            <div class="kpi-value kpi-red">R$ 14,5 MM</div>
+            <div class="kpi-sub">21 clientes em atraso</div>
+            <span class="kpi-badge badge-amber">13,2% DO TOTAL A RECEBER</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Saldo Vencido (Parcelas)</div>
+            <div class="kpi-value kpi-red">R$ 1,17 MM</div>
+            <div class="kpi-sub">122 parcelas vencidas</div>
+            <span class="kpi-badge badge-amber">DE 1.933 PARCELAS</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Maior Concentra&#231;&#227;o</div>
+            <div class="kpi-value kpi-dark">181-360 dias</div>
+            <div class="kpi-sub">R$ 726 mil (62% do saldo vencido)</div>
+            <span class="kpi-badge badge-amber">ATEN&#199;&#195;O</span>
+          </div>
+        </div>
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">Aging — Saldo Vencido por Faixa de Atraso</span>
+              <span class="cs">Valores em R$ mil</span>
+            </div>
+            <div class="chart-wrap h220">
+              <canvas id="chartAging"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <span class="ct">Top 10 Inadimplentes por Valor de Contrato</span>
+              <span class="cs">Valor total dos t&#237;tulos inadimplentes (R$ mil)</span>
+            </div>
+            <div class="chart-wrap h220">
+              <canvas id="chartDefaulters"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- PREMISSAS -->
       <div class="section">
         <div class="section-title">Premissas do Projeto</div>
@@ -416,7 +468,7 @@ body {
               <tr><td>Unidades Remanescentes</td><td>Estoque disponível em Dez/2025</td><td>114 unidades</td></tr>
               <tr><td>Término Previsto</td><td>Previsão de conclusão das obras</td><td>Março / 2029</td></tr>
               <tr><td>TIR Meta</td><td>Taxa Interna de Retorno mínima esperada</td><td>20,0% a.a.</td></tr>
-              <tr><td>TIR Calculada</td><td>Metodologia ACP com inflação de 8% a.a.</td><td>26,0% a.a.</td></tr>
+              <tr><td>TIR Calculada</td><td>Metodologia ACP com inflação de 8% a.a.</td><td>25,84% a.a.</td></tr>
               <tr><td>Taxa de Desconto VP</td><td>Taxa utilizada para cálculo de valor presente</td><td>12,0% a.a.</td></tr>
               <tr><td>VGV Total Nominal</td><td>Projeção total de receitas nominais (410 un.)</td><td>R$ 284.113.556</td></tr>
             </tbody>
@@ -464,7 +516,7 @@ function filterProj() {
 // ---- DATA ----
 const vendasLabels = ["2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"];
 const vendasVgv    = [3.146, 2.151, 0.0, 2.207, 0.29, 0.777, 0.393, 1.021, 3.617, 1.228, 0.51, 1.099, 0.0, 1.191, 0.433, 0.774, 0.835, 0.0, 0.341, 0.46, 0.398, 0.963, 0.996, 0.597, 0.73, 0.0, 0.462, 0.602, 1.78, 1.598, 0.686, 4.324, 2.374, 3.196, 1.779, 0.372, 1.583, 1.235, 1.377, 1.104, 0.0, 0.739, 4.336, 1.478, 3.061, 2.276, 2.829, 1.277, 5.278, 0.0];
-const vendasAcum   = [41.0, 43.0, 43.0, 45.0, 45.2, 46.0, 46.3, 47.2, 50.5, 51.6, 52.1, 53.1, 53.1, 54.2, 54.6, 55.3, 56.1, 56.1, 56.4, 56.8, 57.1, 58.0, 58.9, 59.5, 60.2, 60.2, 60.6, 61.1, 62.7, 64.2, 64.8, 68.8, 70.9, 73.8, 75.4, 75.8, 77.2, 78.4, 79.6, 80.6, 80.6, 81.3, 85.2, 86.6, 89.4, 91.5, 94.0, 95.2, 100, 100];
+const vendasAcum   = [41.0, 43.0, 43.0, 45.0, 45.2, 46.0, 46.3, 47.2, 50.5, 51.6, 52.1, 53.1, 53.1, 54.2, 54.6, 55.3, 56.1, 56.1, 56.4, 56.8, 57.1, 58.0, 58.9, 59.5, 60.2, 60.2, 60.6, 61.1, 62.7, 64.2, 64.8, 68.8, 70.9, 73.8, 75.4, 75.8, 77.2, 78.4, 79.6, 40.6, 40.6, 41.3, 45.2, 46.6, 49.4, 91.5, 94.0, 95.2, 100, 100];
 
 const vsoLabels   = ["2021-10", "2021-11", "2021-12", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-12", "2023-01", "2023-02", "2023-03", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11", "2026-12", "2027-01", "2027-02", "2027-03", "2027-04", "2027-05", "2027-06", "2027-07", "2027-08", "2027-09", "2027-10", "2027-11", "2027-12", "2028-01", "2028-02", "2028-03", "2028-04", "2028-05", "2028-06", "2028-07", "2028-08", "2028-09", "2028-10", "2028-11", "2028-12", "2029-01", "2029-02"];
 const vsoVendidas = [111, 9, 5, 7, 1, 2, 1, 3, 9, 3, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 3, 3, 1, 7, 4, 5, 3, 1, 3, 2, 2, 2, 1, 5, 2, 5, 3, 5, 2, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
@@ -474,10 +526,10 @@ const obraLabels = ["2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022
 const obraPrev   = [1.01, 2.76, 7.72, 10.19, 12.62, 15.54, 18.46, 20.06, 22.19, 24.79, 27.2, 30.51, 33.28, 36.05, 38.2, 41.08, 43.6, 46.22, 48.32, 50.29, 52.28, 54.8, 56.83, 58.71, 60.2, 61.71, 64.33, 67.07, 70.17, 73.15, 75.95, 78.76, 81.64, 84.58, 87.41, 90.3, 93.58, 96.42, 98.84, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const obraReal   = [0.74, 1.56, 2.33, 2.51, 2.87, 3.09, 3.8, 4.53, 5.99, 6.56, 7.71, 7.83, 8.38, 8.55, 8.96, 9.91, 10.73, 11.66, 13.62, 15.6, 18.15, 19.78, 22.08, 23.79, 25.93, 27.27, 29.87, 32.52, 33.92, 36.04, 37.73, 38.78, 40.39, 42.23, 43.04, 44.0, 45.53, 46.68, 48.12, 49.23, 51.03, 52.54, 53.72, 55.67, 57.12, 58.45, 60.01, 62.53, 64.22, 65.88, 68.35, 69.02, 70.45, 76.27, 80.3, 84.33, 88.36, 92.39, 96.42, 98.96, 99.48, 100];
 
-const cfLabels = ["2021-01", "2021-03", "2021-05", "2021-07", "2021-09", "2021-11", "2022-01", "2022-03", "2022-05", "2022-07", "2022-09", "2022-11", "2023-01", "2023-03", "2023-05", "2023-07", "2023-09", "2023-11", "2024-01", "2024-03", "2024-05", "2024-07", "2024-09", "2024-11", "2025-01", "2025-03", "2025-05", "2025-07", "2025-09", "2025-11", "2026-01", "2026-03", "2026-05", "2026-07", "2026-09", "2026-11", "2027-01", "2027-03", "2027-05", "2027-07", "2027-09", "2027-11", "2028-01", "2028-03", "2028-05", "2028-07", "2028-09", "2028-11", "2029-01", "2029-03", "2029-05", "2029-07", "2029-09", "2029-11", "2030-01", "2030-03", "2030-05", "2030-07", "2030-09", "2030-11", "2031-01", "2031-03", "2031-05", "2031-07", "2031-09", "2031-11", "2032-01", "2032-03", "2032-05", "2032-07", "2032-09", "2032-11", "2033-01", "2033-03", "2033-05", "2033-07", "2033-09", "2033-11", "2034-01", "2034-03", "2034-05", "2034-07", "2034-09", "2034-11", "2035-01", "2035-03", "2035-05", "2035-07", "2035-09", "2035-11", "2036-01"];
-const cfRec    = [0.0, 0.0, 0.0, 0.0, 5.28, 2.301, 0.956, 0.968, 0.972, 1.96, 1.148, 0.855, 0.929, 0.795, 1.006, 0.797, 0.831, 0.978, 0.946, 0.779, 0.734, 1.752, 0.881, 1.009, 0.687, 0.736, 0.834, 1.487, 1.019, 0.847, 1.091, 4.017, 1.74, 5.385, 3.63, 1.842, 3.039, 1.309, 2.052, 3.034, 2.666, 1.887, 2.137, 1.842, 2.082, 2.076, 2.165, 2.293, 2.382, 2.495, 2.644, 2.742, 2.84, 2.975, 3.157, 3.026, 3.255, 3.068, 3.061, 3.097, 2.772, 2.668, 2.598, 2.664, 2.346, 2.245, 2.058, 1.947, 1.87, 1.738, 1.607, 1.496, 1.378, 1.256, 1.177, 1.024, 0.905, 0.79, 0.675, 0.559, 0.477, 0.314, 0.196, 0.077, 0.017, 0.017, 0.017, 0.01, 0.01, 0.038, 0.0];
-const cfDesemb = [0.0, 0.0, 0.0, 0.0, 0.0, 0.734, 0.427, 0.198, 0.657, 0.587, 0.111, 0.154, 0.933, 0.836, 1.784, 1.516, 1.545, 1.203, 2.463, 1.905, 0.946, 1.738, 0.87, 1.034, 1.075, 1.359, 1.759, 1.283, 2.278, 1.495, 0.696, 5.244, 3.63, 3.806, 2.282, 0.47, 0.188, 0.0, 0.0, 0.205, 0.0, 0.0, 0.171, 0.0, 0.0, 0.189, 0.0, 0.0, 0.217, 0.0, 0.0, 0.244, 0.0, 0.0, 0.277, 0.0, 0.0, 0.288, 0.0, 0.0, 0.288, 0.0, 0.0, 0.233, 0.0, 0.0, 0.201, 0.0, 0.0, 0.167, 0.0, 0.0, 0.134, 0.0, 0.0, 0.101, 0.0, 0.0, 0.068, 0.0, 0.0, 0.036, 0.0, 0.0, 0.006, 0.0, 0.0, 0.001, 0.0, 0.0, 0.001];
-const cfSaldo  = [-0.013, -0.045, -0.076, -0.076, 4.428, -0.24, 0.135, 0.485, -0.011, 1.114, 0.705, 0.244, -0.447, -0.47, -1.209, -1.152, -1.18, -0.623, -1.995, -1.66, -0.717, -0.73, -0.694, -0.412, -0.823, -1.123, -1.421, -0.336, -1.799, -1.279, 0.066, -1.644, -2.162, 1.276, 1.074, 1.084, 2.585, 1.041, 1.799, 2.549, 2.324, 1.645, 1.707, 1.597, 1.831, 1.623, 1.908, 2.027, 1.891, 2.226, 2.371, 2.211, 2.558, 2.686, 2.584, 2.735, 2.964, 2.482, 2.769, 2.799, 2.238, 2.438, 2.502, 2.337, 2.257, 2.161, 1.778, 1.873, 1.799, 1.505, 1.546, 1.439, 1.189, 1.207, 1.133, 0.882, 0.87, 0.759, 0.579, 0.535, 0.458, 0.263, 0.186, 0.072, 0.009, 0.016, 0.016, 0.008, 0.009, 0.038, -0.001];
+const cfLabels = ["out/21","nov/21","dez/21","jan/22","fev/22","mar/22","abr/22","mai/22","jun/22","jul/22","ago/22","set/22","out/22","nov/22","dez/22","jan/23","fev/23","mar/23","abr/23","mai/23","jun/23","jul/23","ago/23","set/23","out/23","nov/23","dez/23","jan/24","fev/24","mar/24","abr/24","mai/24","jun/24","jul/24","ago/24","set/24","out/24","nov/24","dez/24","jan/25","fev/25","mar/25","abr/25","mai/25","jun/25","jul/25","ago/25","set/25","out/25","nov/25","dez/25","jan/26","fev/26","mar/26"];
+const cfRec    = [6.16,5.49,2.44,0.92,0.96,1.17,0.98,0.82,1.04,0.90,2.10,1.03,1.21,0.94,0.86,1.15,0.94,0.86,0.80,0.97,1.01,1.00,2.45,2.19,3.04,1.59,2.62,3.83,2.33,1.95,15.33,0.91,2.82,2.31,2.10,1.80,1.52,1.67,1.34,1.21,1.62,1.32,1.46,1.95,1.48,2.89,1.69,1.68,1.59,1.37,1.86,1.65,3.42,5.40];
+const cfDesemb = [2.19,2.59,3.81,0.83,0.64,0.50,1.03,1.02,1.60,0.87,1.32,0.45,1.15,0.62,0.84,1.38,1.20,1.27,2.28,2.23,2.77,2.08,2.64,2.05,2.68,1.63,2.89,2.98,1.76,2.49,2.25,1.65,2.15,2.82,1.66,1.93,2.57,1.84,2.23,1.92,2.43,2.23,2.27,2.65,2.25,2.29,2.34,3.34,2.51,2.59,2.98,2.84,2.28,5.76];
+const cfSaldo  = [4.92,7.81,6.44,6.53,5.12,5.76,5.66,5.46,4.85,4.89,5.53,6.11,6.06,6.38,6.40,6.12,5.86,5.45,3.96,2.70,1.36,0.24,0.05,0.19,0.54,0.36,0.08,0.93,1.50,0.96,13.95,13.20,13.87,13.37,13.81,13.68,12.64,12.46,11.66,10.96,10.15,9.24,8.52,7.81,7.05,7.65,7.01,5.34,4.42,3.20,2.07,0.88,2.02,1.65];
 
 const mktCats = ["PDV", "Eventos", "Mídias", "Agências e assessorias", "Fretamento avião mais viagens equipe", "Honorários equipe PJ", "Manutenção de vendas", "Maquete", "Campanhas", "Materiais de apoio + Manuais"];
 const mktVals = [2326.1, 1201.7, 1150.4, 1141.0, 654.6, 627.5, 455.1, 155.8, 142.4, 138.0];
@@ -695,6 +747,64 @@ function initAll() {
   }
   renderBars('mktBars', mktCats, mktVals);
   renderBars('licBars', licCats, licVals);
+
+  // ---- INADIMPLÊNCIA - AGING ----
+  new Chart(document.getElementById('chartAging'), {
+    type: 'bar',
+    data: {
+      labels: ['0-30 dias','31-60 dias','61-90 dias','91-180 dias','181-360 dias','360+ dias'],
+      datasets: [{
+        label: 'Saldo Vencido (R$ mil)',
+        data: [59.0, 51.3, 19.1, 81.5, 726.4, 234.8],
+        backgroundColor: ['#fbbf24','#f59e0b','#f97316','#ef4444','#dc2626','#991b1b'],
+        borderRadius: 4, borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...ttStyle(),
+          callbacks: { label: ctx => ' R$ ' + ctx.parsed.x.toFixed(1) + ' mil' }
+        }
+      },
+      scales: {
+        x: { ...xScale(), title: { display: false }, ticks: { callback: v => 'R$ ' + v + 'k' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+
+  // ---- INADIMPLÊNCIA - TOP DEFAULTERS ----
+  new Chart(document.getElementById('chartDefaulters'), {
+    type: 'bar',
+    data: {
+      labels: ['Suelen C. F. Concei\u00e7\u00e3o','Bruno D. C. Costa','Naiara Loes','Marlos M. Oliveira','Jadson F. Ara\u00fajo','Luciano G. Daniel','Orlaneide S. T. Dantas','Fabio D. Rosa','Gustavo L. Pergher','Vagner da Silva'],
+      datasets: [{
+        label: 'Valor Inadimplente (R$ mil)',
+        data: [1711.6, 1535.6, 1062.0, 1053.0, 762.5, 757.7, 749.4, 706.0, 637.7, 618.0],
+        backgroundColor: '#dc2626',
+        borderRadius: 4, borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...ttStyle(),
+          callbacks: { label: ctx => ' R$ ' + ctx.parsed.x.toFixed(1) + ' mil' }
+        }
+      },
+      scales: {
+        x: { ...xScale(), ticks: { callback: v => 'R$ ' + v + 'k' } },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
 }
 </script>
 </body>
