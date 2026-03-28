@@ -46,12 +46,12 @@ _request_window_start = time.time()
 
 
 def _throttle():
-    """Respect 200 req/min rate limit."""
+    """Respect 200 req/min rate limit (conservative: pause at 100 req/min)."""
     global _request_count, _request_window_start
     _request_count += 1
     elapsed = time.time() - _request_window_start
-    if _request_count >= 190 and elapsed < 60:
-        wait = 60 - elapsed + 1
+    if _request_count >= 95 and elapsed < 60:
+        wait = 60 - elapsed + 2
         log.info(f"Rate limit: aguardando {wait:.0f}s...")
         time.sleep(wait)
         _request_count = 0
@@ -61,8 +61,8 @@ def _throttle():
         _request_window_start = time.time()
 
 
-def api_get(path, params=None):
-    """GET request to Sienge API with auth and pagination."""
+def api_get(path, params=None, _retries=3):
+    """GET request to Sienge API with auth, pagination and retry on 429."""
     url = SIENGE_BASE + path
     if params:
         url += "?" + urlencode(params)
@@ -75,6 +75,13 @@ def api_get(path, params=None):
         with urlopen(req, timeout=30) as resp:
             return json.loads(resp.read())
     except HTTPError as e:
+        if e.code == 429 and _retries > 0:
+            wait = 30 * (4 - _retries)  # 30s, 60s, 90s
+            log.warning(f"429 Too Many Requests on {url}. Aguardando {wait}s... (retries={_retries})")
+            time.sleep(wait)
+            global _request_count
+            _request_count = 0
+            return api_get(path, params, _retries - 1)
         body = e.read().decode() if e.fp else ""
         log.error(f"HTTP {e.code} on {url}: {body[:300]}")
         raise
