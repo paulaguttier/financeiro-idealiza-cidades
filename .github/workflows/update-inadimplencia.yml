@@ -1,0 +1,45 @@
+name: Atualizar Inadimplência - Seehaus
+
+on:
+  schedule:
+    # Roda todo dia à meia-noite horário de Brasília (03:00 UTC)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    # Permite rodar manualmente pelo GitHub
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rodar script de atualização
+        env:
+          SIENGE_SUBDOMAIN: ${{ secrets.SIENGE_SUBDOMAIN }}
+          SIENGE_API_USER: ${{ secrets.SIENGE_API_USER }}
+          SIENGE_API_PASSWORD: ${{ secrets.SIENGE_API_PASSWORD }}
+          SIENGE_ENTERPRISE_ID: ${{ secrets.SIENGE_ENTERPRISE_ID }}
+          SIENGE_COMPANY_ID: ${{ secrets.SIENGE_COMPANY_ID }}
+          DASHBOARD_FILE: index.html
+        run: python update_inadimplencia.py
+
+      - name: Verificar se houve mudanças
+        id: changes
+        run: |
+          git diff --quiet index.html && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit e push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "Robô Inadimplência"
+          git config user.email "robo@idealizacidades.com.br"
+          git add index.html
+          git commit -m "Atualizar inadimplência — $(date +'%d/%m/%Y %H:%M')"
+          git push
