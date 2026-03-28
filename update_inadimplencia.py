@@ -110,8 +110,8 @@ def fetch_sales_contracts():
     contracts = api_get_all("/sales-contracts", {
         "enterpriseId": ENTERPRISE_ID,
     })
-    # Filter only active contracts (situation 1=Authorized or 2=Issued)
-    active = [c for c in contracts if c.get("situation") in [1, 2, "1", "2"]]
+    # Filter only active contracts (Autorizado or Emitido — strings in Portuguese)
+    active = [c for c in contracts if c.get("situation") in ["Autorizado", "Emitido"]]
     log.info(f"Total contratos: {len(contracts)}, ativos: {len(active)}")
     return active
 
@@ -153,13 +153,22 @@ def collect_inadimplencia_data(contracts):
     contract_data = []  # {customer_id, customer_name, defaulting, total_due, overdue_amount, installments_detail}
 
     # Collect unique customer IDs from contracts
+    # Sienge returns customers in salesContractCustomers array
     for c in contracts:
-        cid = c.get("customerId") or c.get("customer", {}).get("id")
-        if cid:
-            customer_ids_seen.add(cid)
-            # Try to get customer name
-            name = c.get("customerName") or c.get("customer", {}).get("name", f"Cliente {cid}")
-            customer_names[cid] = name
+        customers = c.get("salesContractCustomers", [])
+        if customers:
+            # Use main customer or first one
+            main_cust = next((x for x in customers if x.get("main")), customers[0])
+            cid = main_cust.get("id")
+            if cid:
+                customer_ids_seen.add(cid)
+                customer_names[cid] = main_cust.get("name", f"Cliente {cid}")
+        else:
+            # Fallback to customerId field
+            cid = c.get("customerId")
+            if cid:
+                customer_ids_seen.add(cid)
+                customer_names[cid] = c.get("customerName", f"Cliente {cid}")
 
     log.info(f"Clientes únicos: {len(customer_ids_seen)}")
 
