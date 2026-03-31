@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seehaus Home Resort - Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -972,7 +972,7 @@
         const cfRec = [6.16,5.49,2.44,0.92,0.96,1.17,0.98,0.82,1.04,0.90,2.10,1.03,1.21,0.94,0.86,1.15,0.94,0.86,0.80,0.97,1.01,1.00,2.45,2.19,3.04,1.59,2.62,3.83,2.33,1.95,15.33,0.91,2.82,2.31,2.10,1.80,1.52,1.67,1.34,1.21,1.62,1.32,1.46,1.95,1.48,2.89,1.69,1.68,1.59,1.37,1.86,1.65,3.42,5.40,4.84,4.06,5.21,7.68,3.98,5.20,1.86,1.59,2.10,2.76,2.12,1.01,1.71,1.72,2.41,2.68,4.07,2.28,1.31,1.47,1.73,1.70,1.35,1.37,1.47,1.58,1.78,1.54,1.58,1.60,1.79,1.70,1.96,1.75,1.81,1.83,1.88,1.95,2.22,2.01,2.05,2.07,2.23,2.17,2.37,2.37,2.28,2.30,2.31,2.51,2.50,2.31,2.31,2.28,2.47,2.30,2.39,2.28,2.30,2.07];
         const cfDesemb = [2.19,2.59,3.81,0.83,0.64,0.50,1.03,1.02,1.60,0.87,1.32,0.45,1.15,0.62,0.84,1.38,1.20,1.27,2.28,2.23,2.77,2.08,2.64,2.05,2.68,1.63,2.89,2.98,1.76,2.49,2.25,1.65,2.15,2.82,1.66,1.93,2.57,1.84,2.23,1.92,2.43,2.23,2.27,2.65,2.25,2.29,2.34,3.34,2.51,2.59,2.98,2.84,2.28,5.76,4.26,5.71,5.66,5.69,5.71,4.18,2.46,2.32,1.81,1.82,1.76,1.71,1.70,1.63,1.60,1.65,1.58,1.60,1.63,1.44,1.41,1.44,1.36,1.32,1.34,0.10,0.11,0.16,0.11,0.11,0.16,0.12,0.11,0.17,0.11,0.12,0.17,0.12,0.12,0.19,0.12,0.12,0.19,0.13,0.13,0.20,0.14,0.13,0.20,0.13,0.14,0.22,0.13,0.13,0.20,0.14,0.13,0.16,0.08,0.08];
         const cfSaldo = [4.92,7.81,6.44,6.53,5.12,5.76,5.66,5.46,4.85,4.89,5.53,6.11,6.06,6.38,6.40,6.12,5.86,5.45,3.96,2.70,1.36,0.24,0.05,0.19,0.54,0.36,0.08,0.93,1.50,0.96,13.95,13.20,13.87,13.37,13.81,13.68,12.64,12.46,11.66,10.96,10.15,9.24,8.52,7.81,7.05,7.65,7.01,5.34,4.42,3.20,2.07,0.88,2.02,1.65,2.23,0.58,0.14,2.12,0.40,1.41,0.81,0.08,0.38,1.32,1.68,0.98,0.99,1.08,1.89,2.92,5.41,6.10,5.78,5.82,6.14,6.40,6.39,6.44,6.57,8.05,9.72,11.10,12.58,14.08,15.70,17.29,19.13,20.71,22.41,24.13,25.84,27.67,29.76,31.58,33.51,35.46,37.50,39.54,41.78,43.95,46.09,48.26,50.36,52.74,55.09,57.18,59.35,61.50,63.76,65.92,68.18,70.30,72.52,74.50];
-        const CF_EXEC_END = 52;
+
 
         const mktCats = ["PDV", "Eventos", "Mídias", "Agências e assessorias", "Fretamento avião mais viagens equipe", "Honorários equipe PJ", "Manutenção de vendas", "Maquete", "Campanhas", "Materiais de apoio + Manuais"];
         const mktVals = [2326.1, 1201.7, 1150.4, 1141.0, 654.6, 627.5, 455.1, 155.8, 142.4, 138.0];
@@ -987,13 +987,22 @@
         let chartAging = null;
         let chartDefaulters = null;
 
-        // Password Check
-        function checkPassword() {
-            const input = document.getElementById('passwordInput');
-            const correctPassword = '#1d34l1z4!';
-            const errorMsg = document.getElementById('passwordError');
+        // Password Check (hash-based - password is not stored in plain text)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-            if (input.value === correctPassword) {
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const expectedHash = 'be3f09a590ff045089dbbe58d15c37cb8f4008aa92d3aa7f5cfedafcf6a9a756';
+            const errorMsg = document.getElementById('passwordError');
+            const inputHash = await hashPassword(input.value);
+
+            if (inputHash === expectedHash) {
                 document.getElementById('passwordOverlay').classList.add('hidden');
                 document.getElementById('mainContainer').style.display = 'block';
                 initViabCharts();
