@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seehaus Home Resort - Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #0d3b66 0%, #1a5490 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 59, 102, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .password-overlay.hidden {
+            display: none;
+        }
+
+        .password-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .password-box h1 {
+            color: #0d3b66;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .password-box p {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .password-input {
+            width: 280px;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #1d4ed8;
+        }
+
+        .password-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1d4ed8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .password-btn:hover {
+            background: #1e40af;
+        }
+
+        .password-error {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100vh;
+            background: #0a2e52;
+            color: white;
+            padding: 24px 0;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .sidebar.visible {
+            display: block;
+        }
+
+        .sidebar-logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-logo h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #93c5fd;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-logo p {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .sidebar-section {
+            padding: 0 16px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            padding: 8px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 13px;
+            font-weight: 500;
+            color: #cbd5e1;
+            gap: 10px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .sidebar-item.active {
+            background: rgba(29, 78, 216, 0.3);
+            color: white;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .sidebar-item .item-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .sidebar-item .item-dot.green { background: #16a34a; }
+        .sidebar-item .item-dot.blue { background: #3b82f6; }
+        .sidebar-item .item-dot.amber { background: #f59e0b; }
+        .sidebar-item .item-dot.gray { background: #6b7280; }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            margin: 12px 16px;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .app-wrapper {
+            transition: margin-left 0.3s;
+        }
+
+        .app-wrapper.with-sidebar {
+            margin-left: 260px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #0d3b66;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .header-empreendimento {
+            background: #eff6ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            padding: 0 30px;
+        }
+
+        .tab-btn {
+            padding: 16px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #64748b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.15s;
+        }
+
+        .tab-btn:hover {
+            color: #1e293b;
+        }
+
+        .tab-btn.active {
+            color: #1d4ed8;
+            border-bottom-color: #1d4ed8;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 24px;
+            border-radius: 8px;
+            border-left: 4px solid #1d4ed8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .kpi-card.green {
+            border-left-color: #16a34a;
+        }
+
+        .kpi-card.blue {
+            border-left-color: #1d4ed8;
+        }
+
+        .kpi-card.red {
+            border-left-color: #dc2626;
+        }
+
+        .kpi-card.dark {
+            border-left-color: #475569;
+        }
+
+        .kpi-badge {
+            display: inline-block;
+            background: #1d4ed8;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .kpi-card.green .kpi-badge {
+            background: #16a34a;
+        }
+
+        .kpi-card.red .kpi-badge {
+            background: #dc2626;
+        }
+
+        .kpi-card.dark .kpi-badge {
+            background: #475569;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0d3b66;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0d3b66;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            font-weight: 400;
+            color: #94a3b8;
+            margin-left: 8px;
+        }
+
+        .prem-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: 30px;
+        }
+
+        .prem-table thead {
+            background: #f8fafc;
+            border-top: 2px solid #e2e8f0;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .prem-table th {
+            padding: 12px 16px;
+            text-align: left;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .prem-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .prem-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .prem-table .section-header {
+            background: #0d3b66;
+            color: white;
+            font-weight: 700;
+            border-bottom: 2px solid #0d3b66;
+        }
+
+        .prem-table .section-header td {
+            color: white;
+            border-bottom-color: #0d3b66;
+        }
+
+        .prem-table .indent {
+            padding-left: 32px;
+        }
+
+        .prem-table .variacao {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .variacao-up {
+            color: #16a34a;
+        }
+
+        .variacao-down {
+            color: #dc2626;
+        }
+
+        /* Premissas Grid */
+        .premissas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .premissas-block {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .premissas-block-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0d3b66;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1d4ed8;
+        }
+
+        .premissa-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .premissa-row:last-child {
+            border-bottom: none;
+        }
+
+        .premissa-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .premissa-value {
+            font-size: 13px;
+            color: #0d3b66;
+            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .premissa-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+            position: relative;
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-container::after {
+            content: '\u26F6';
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 16px;
+            color: #94a3b8;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .chart-container:hover::after {
+            opacity: 1;
+        }
+
+        .chart-container h3 {
+            color: #0d3b66;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Chart Modal */
+        .chart-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .chart-modal-overlay.active {
+            display: flex;
+        }
+
+        .chart-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            width: 95%;
+            max-width: 1400px;
+            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .chart-modal h3 {
+            color: #0d3b66;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            color: #475569;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .chart-modal-close:hover {
+            background: #e2e8f0;
+        }
+
+        .chart-modal-canvas {
+            position: relative;
+            height: 65vh;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .charts-row-wide {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-wrapper-wide {
+            position: relative;
+            height: 350px;
+        }
+
+        .hbar-container {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 30px;
+        }
+
+        .hbar-container h3 {
+            color: #0d3b66;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hbar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .hbar-label {
+            width: 180px;
+            font-size: 12px;
+            color: #334155;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .hbar-bar {
+            height: 24px;
+            min-width: 40px;
+            background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: width 0.3s ease;
+        }
+
+        .hbar-track {
+            flex: 1;
+        }
+
+        .hbar-bar.red-gradient {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+        }
+
+        .hbar-bar.amber-gradient {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .hbar-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+            padding-left: 8px;
+            min-width: 60px;
+        }
+
+        .inadimplencia-section {
+            margin-top: 40px;
+        }
+
+        .inadimplencia-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .inadimplencia-kpis .kpi-card {
+            border-left-color: #dc2626;
+        }
+
+        .inadimplencia-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .aportes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 30px;
+        }
+
+        .aportes-table thead {
+            background: #f8fafc;
+            border-top: 2px solid #e2e8f0;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .aportes-table th {
+            padding: 12px 8px;
+            text-align: right;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .aportes-table th:first-child {
+            text-align: left;
+        }
+
+        .aportes-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            text-align: right;
+        }
+
+        .aportes-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #0d3b66;
+        }
+
+        .aportes-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .aportes-table .total-row {
+            background: #f8fafc;
+            border-top: 2px solid #cbd5e1;
+            border-bottom: 2px solid #cbd5e1;
+            font-weight: 700;
+            color: #0d3b66;
+        }
+
+        .aportes-table .total-row td {
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .freq-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            .inadimplencia-charts {
+                grid-template-columns: 1fr;
+            }
+            .premissas-grid {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                width: 220px;
+            }
+            .app-wrapper.with-sidebar {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            .tab-bar {
+                padding: 0;
+            }
+            .tab-btn {
+                flex: 1;
+                text-align: center;
+                font-size: 0.85rem;
+                padding: 14px 12px;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .app-wrapper.with-sidebar {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Overlay -->
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-box">
+            <h1>Idealiza Cidades</h1>
+            <p>Dashboard financeiro protegido por senha</p>
+            <input
+                type="password"
+                id="passwordInput"
+                class="password-input"
+                placeholder="Digite a senha"
+                autocomplete="off"
+            />
+            <button class="password-btn" onclick="checkPassword()">Acessar</button>
+            <div class="password-error" id="passwordError">Senha incorreta</div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <h2>Idealiza Cidades</h2>
+            <p>Dashboard Financeiro</p>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Empreendimentos</div>
+
+            <button class="sidebar-item active" data-empreendimento="todos" onclick="selectEmpreendimento('todos', this)">
+                <span class="item-dot blue"></span>
+                Todos os Empreendimentos
+            </button>
+
+            <button class="sidebar-item" data-empreendimento="seehaus" onclick="selectEmpreendimento('seehaus', this)">
+                <span class="item-dot green"></span>
+                Seehaus Home Resort
+            </button>
+
+            <button class="sidebar-item" data-empreendimento="palacio" onclick="selectEmpreendimento('palacio', this)">
+                <span class="item-dot amber"></span>
+                Palácio das Águas
+            </button>
+
+            <button class="sidebar-item" data-empreendimento="estancia1" onclick="selectEmpreendimento('estancia1', this)">
+                <span class="item-dot green"></span>
+                Estância dos Montes Fase 1
+            </button>
+
+            <button class="sidebar-item" data-empreendimento="estancia2" onclick="selectEmpreendimento('estancia2', this)">
+                <span class="item-dot green"></span>
+                Estância dos Montes Fase 2
+            </button>
+
+            <button class="sidebar-item disabled" style="opacity: 0.4; cursor: not-allowed;" disabled>
+                <span class="item-dot gray"></span>
+                Em breve...
+            </button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Filtros</div>
+            <button class="sidebar-item" style="opacity: 0.4; cursor: not-allowed;" disabled>
+                <span class="item-dot gray"></span>
+                Por periodo (em breve)
+            </button>
+        </div>
+    </div>
+
+    <!-- App Wrapper -->
+    <div class="app-wrapper" id="appWrapper">
+        <!-- Main Container -->
+        <div class="container" id="mainContainer" style="display: none;">
+
+            <!-- ======================== SEEHAUS ======================== -->
+            <div id="view-seehaus">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Seehaus Home Resort</h1>
+                    <p>Dashboard de Acompanhamento | Idealiza Cidades</p>
+                </div>
+                <div class="header-empreendimento">SPE Gaspar</div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="viabilidade" onclick="switchTab('viabilidade')">
+                    Viabilidade Atual
+                </button>
+                <button class="tab-btn" data-tab="acompanhamento" onclick="switchTab('acompanhamento')">
+                    Acompanhamento Financeiro
+                </button>
+            </div>
+
+            <!-- Tab 1: Viabilidade Atual -->
+            <div id="tab-viabilidade" class="tab-content active">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">NOMINAL</div>
+                        <div class="kpi-value">R$ 284,1M</div>
+                        <div class="kpi-label">VGV Total Nominal<br>Projecao — 410 unidades lancadas</div>
+                    </div>
+
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">RENTAVEL</div>
+                        <div class="kpi-value">R$ 120,1M</div>
+                        <div class="kpi-label">Lucro Projetado<br>Margem nominal de 42,3%</div>
+                    </div>
+
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">DENTRO DA META</div>
+                        <div class="kpi-value">25,84%</div>
+                        <div class="kpi-label">TIR do Investidor a.a.<br>1,932% a.m. · Metodologia ACP</div>
+                    </div>
+
+                    <div class="kpi-card dark">
+                        <div class="kpi-badge">RETORNO</div>
+                        <div class="kpi-value">4,86x</div>
+                        <div class="kpi-label">Multiplo (Lucro + Exp.) / Exp.<br>Distribuicoes / Aportes dos investidores</div>
+                    </div>
+
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">CAPITAL</div>
+                        <div class="kpi-value">R$ 31,1M</div>
+                        <div class="kpi-label">Exposicao Maxima<br>Total de aportes na SPE</div>
+                    </div>
+
+                    <!-- Novos indicadores -->
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">MARGEM VP</div>
+                        <div class="kpi-value">28,5%</div>
+                        <div class="kpi-label">Lucro a VP / VGV a VP<br>Lancamento: 30,2% · Variacao: -1,7 pp</div>
+                    </div>
+
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">MARGEM NOMINAL</div>
+                        <div class="kpi-value">42,3%</div>
+                        <div class="kpi-label">Lucro Nominal / VGV Nominal<br>Lancamento: 49,6% · Variacao: -7,3 pp</div>
+                    </div>
+
+                    <div class="kpi-card dark">
+                        <div class="kpi-badge">EFICIENCIA</div>
+                        <div class="kpi-value">3,15x</div>
+                        <div class="kpi-label">Multiplo VGV / Custo de Obra<br>Lancamento: 4,61x · Variacao: -1,45x</div>
+                    </div>
+                </div>
+
+                <!-- Viability Indicators Table -->
+                <div class="section-title">Resultados e Indicadores de Viabilidade <span class="freq-badge">Trimestral (realizado ate Dez/2025)</span></div>
+                <table class="prem-table">
+                    <thead>
+                        <tr>
+                            <th>Indicador</th>
+                            <th style="text-align: right;">Lancamento Out/2021</th>
+                            <th style="text-align: right;">Dez/2025</th>
+                            <th style="text-align: right;">Variacao</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- RECEITAS — VGV -->
+                        <tr class="section-header">
+                            <td colspan="4">1. RECEITAS — VGV</td>
+                        </tr>
+                        <tr>
+                            <td>VGV Nominal</td>
+                            <td style="text-align: right;">R$ 136.548.995</td>
+                            <td style="text-align: right;">R$ 284.113.556</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 108,1%</span></td>
+                        </tr>
+                        <tr>
+                            <td>VGV a Valor Presente</td>
+                            <td style="text-align: right;">R$ 97.679.588</td>
+                            <td style="text-align: right;">R$ 209.982.554</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 115,0%</span></td>
+                        </tr>
+
+                        <!-- CUSTOS E INVESTIMENTOS -->
+                        <tr class="section-header">
+                            <td colspan="4">2. CUSTOS E INVESTIMENTOS</td>
+                        </tr>
+                        <tr>
+                            <td>Custo de Obra Total</td>
+                            <td style="text-align: right;">R$ 29.638.933</td>
+                            <td style="text-align: right;">R$ 90.076.675</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 203,9%</span></td>
+                        </tr>
+                        <tr>
+                            <td class="indent">— Executado</td>
+                            <td style="text-align: right;">—</td>
+                            <td style="text-align: right;">R$ 61.569.655</td>
+                            <td class="variacao">—</td>
+                        </tr>
+                        <tr>
+                            <td class="indent">— A Executar</td>
+                            <td style="text-align: right;">R$ 29.638.933</td>
+                            <td style="text-align: right;">R$ 28.507.020</td>
+                            <td class="variacao"><span class="variacao-down">&#9660; 3,8%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Terreno</td>
+                            <td style="text-align: right;">R$ 15.151.265</td>
+                            <td style="text-align: right;">R$ 16.771.925</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 10,7%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Despesas Comerciais</td>
+                            <td style="text-align: right;">R$ 4.096.470</td>
+                            <td style="text-align: right;">R$ 21.400.258</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 422,4%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Licenciamento e Projetos</td>
+                            <td style="text-align: right;">R$ 1.200.000</td>
+                            <td style="text-align: right;">R$ 5.588.119</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 365,7%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Despesas de Financiamento</td>
+                            <td style="text-align: right;">—</td>
+                            <td style="text-align: right;">R$ 11.383.282</td>
+                            <td class="variacao">—</td>
+                        </tr>
+
+                        <!-- RESULTADOS -->
+                        <tr class="section-header">
+                            <td colspan="4">3. RESULTADOS</td>
+                        </tr>
+                        <tr>
+                            <td>Lucro Nominal</td>
+                            <td style="text-align: right;">R$ 67.734.529</td>
+                            <td style="text-align: right;">R$ 120.094.035</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 77,3%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Lucro a Valor Presente</td>
+                            <td style="text-align: right;">R$ 29.503.800</td>
+                            <td style="text-align: right;">R$ 59.895.943</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 103,0%</span></td>
+                        </tr>
+
+                        <!-- INDICADORES DE PERFORMANCE -->
+                        <tr class="section-header">
+                            <td colspan="4">4. INDICADORES DE PERFORMANCE</td>
+                        </tr>
+                        <tr>
+                            <td>Lucro a VP / VGV a VP</td>
+                            <td style="text-align: right;">30,2%</td>
+                            <td style="text-align: right;">28,5%</td>
+                            <td class="variacao"><span class="variacao-down">&#9660; 1,7 pp</span></td>
+                        </tr>
+                        <tr>
+                            <td>Lucro Nominal / VGV Nominal</td>
+                            <td style="text-align: right;">49,6%</td>
+                            <td style="text-align: right;">42,3%</td>
+                            <td class="variacao"><span class="variacao-down">&#9660; 7,3 pp</span></td>
+                        </tr>
+                        <tr>
+                            <td>Exposicao de Caixa Maxima</td>
+                            <td style="text-align: right;">R$ 7.582.193</td>
+                            <td style="text-align: right;">R$ 31.012.691</td>
+                            <td class="variacao"><span class="variacao-up">&#9650; 309,0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multiplo (Lucro + Exp.) / Exp.</td>
+                            <td style="text-align: right;">9,93x</td>
+                            <td style="text-align: right;">4,87x</td>
+                            <td class="variacao"><span class="variacao-down">&#9660; 5,06x</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multiplo VGV / Custo Obra</td>
+                            <td style="text-align: right;">4,61x</td>
+                            <td style="text-align: right;">3,15x</td>
+                            <td class="variacao"><span class="variacao-down">&#9660; 1,45x</span></td>
+                        </tr>
+                        <tr>
+                            <td>TIR sem ajuste</td>
+                            <td style="text-align: right;">3,78% a.m.</td>
+                            <td style="text-align: right;">—</td>
+                            <td class="variacao">—</td>
+                        </tr>
+                        <tr>
+                            <td>TIR ajustado</td>
+                            <td style="text-align: right;">1,93% a.m. / 25,81% a.a.</td>
+                            <td style="text-align: right;">—</td>
+                            <td class="variacao">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Premissas do Estudo (movida para cima, antes do fluxo de caixa) -->
+                <div class="section-title">Premissas do Estudo de Viabilidade <span class="freq-badge">Trimestral (realizado ate Dez/2025)</span></div>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+                    Referente ao estudo de viabilidade de <strong>Dezembro/2025</strong>. Premissas utilizadas para projecao dos resultados acima.
+                </p>
+
+                <div class="premissas-grid">
+                    <!-- A | Estoque em Aberto -->
+                    <div class="premissas-block">
+                        <div class="premissas-block-title">A | Estoque em Aberto</div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Unidades em estoque</div>
+                                <div class="premissa-desc">Do total de 410 unidades, 219 foram vendidas</div>
+                            </div>
+                            <div class="premissa-value">191 unidades</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">VGV a Valor Presente</div>
+                                <div class="premissa-desc">Valor Geral de Vendas das 191 un. a vista (tabela atual)</div>
+                            </div>
+                            <div class="premissa-value">R$ 136.255.010</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Ticket Medio a VP</div>
+                                <div class="premissa-desc">VGV tabela a vista / 191 unidades</div>
+                            </div>
+                            <div class="premissa-value">R$ 713.377</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Valorizacao do estoque</div>
+                                <div class="premissa-desc">Inflacao de precos do imovel projetada para o periodo</div>
+                            </div>
+                            <div class="premissa-value">0,30% a.m.</div>
+                        </div>
+                    </div>
+
+                    <!-- B | Condicoes de Venda -->
+                    <div class="premissas-block">
+                        <div class="premissas-block-title">B | Condicoes de Venda</div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Tabela de vendas</div>
+                                <div class="premissa-desc">10% de entrada + 48 parcelas mensais iguais (tabela media)</div>
+                            </div>
+                            <div class="premissa-value">10% + 48x</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Juros embutidos (Price)</div>
+                                <div class="premissa-desc">Juros Price embutidos nas parcelas; sem correcao adicional</div>
+                            </div>
+                            <div class="premissa-value">0,70% a.m.</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Velocidade de vendas</div>
+                                <div class="premissa-desc">Estoque se esgota em aprox. 63 meses (ate inicio de 2031)</div>
+                            </div>
+                            <div class="premissa-value">3 un. / mes</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Comissao de vendas</div>
+                                <div class="premissa-desc">Percentual sobre o valor nominal da unidade vendida</div>
+                            </div>
+                            <div class="premissa-value">6,0%</div>
+                        </div>
+                    </div>
+
+                    <!-- C | Marketing -->
+                    <div class="premissas-block">
+                        <div class="premissas-block-title">C | Marketing</div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Marketing recorrente</div>
+                                <div class="premissa-desc">Investimento mensal em marketing digital, assessoria e material</div>
+                            </div>
+                            <div class="premissa-value">R$ 50.000 / mes</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Verba para entrega</div>
+                                <div class="premissa-desc">Pontual — acoes de marketing na entrega das chaves</div>
+                            </div>
+                            <div class="premissa-value">R$ 300.000</div>
+                        </div>
+                    </div>
+
+                    <!-- D | Construcao -->
+                    <div class="premissas-block">
+                        <div class="premissas-block-title">D | Construcao</div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Cronograma de execucao</div>
+                                <div class="premissa-desc">Curva de desembolso baseada no cronograma fisico-financeiro</div>
+                            </div>
+                            <div class="premissa-value">Conforme engenharia</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Conclusao da obra</div>
+                                <div class="premissa-desc">Data de finalizacao prevista; entrega das unidades aos compradores</div>
+                            </div>
+                            <div class="premissa-value">Novembro / 2026</div>
+                        </div>
+                        <div class="premissa-row">
+                            <div>
+                                <div class="premissa-label">Obra a executar</div>
+                                <div class="premissa-desc">Do total de R$ 90,1MM — R$ 61,6MM ja executados (68,3%)</div>
+                            </div>
+                            <div class="premissa-value">R$ 28.507.020</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Flow Chart -->
+                <div class="section-title">Fluxo de Caixa Projetado <span class="freq-badge">Mensal (realizado ate Fev/2026)</span></div>
+                <div class="charts-row-wide">
+                    <div class="chart-container">
+                        <h3>Fluxo de Caixa Mensal</h3>
+                        <div class="chart-wrapper-wide">
+                            <canvas id="chartCashFlow"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aportes Futuros Table -->
+                <div class="section-title">Aportes Futuros Programados <span class="freq-badge">Mensal (realizado ate Fev/2026)</span></div>
+                <table class="aportes-table">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th>Idealiza Inc (73,4%)</th>
+                            <th>DMCO (18,35%)</th>
+                            <th>Trama Urbana (7,0%)</th>
+                            <th>Paula (0,75%)</th>
+                            <th>Eduardo (0,5%)</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mar/2026</td>
+                            <td>R$ 155.000</td>
+                            <td>R$ 458.750</td>
+                            <td>R$ 175.000</td>
+                            <td>R$ 18.750</td>
+                            <td>R$ 12.500</td>
+                            <td>R$ 820.000</td>
+                        </tr>
+                        <tr>
+                            <td>Abr/2026</td>
+                            <td>R$ 1.835.000</td>
+                            <td>R$ 458.750</td>
+                            <td>R$ 175.000</td>
+                            <td>R$ 18.750</td>
+                            <td>R$ 12.500</td>
+                            <td>R$ 2.500.000</td>
+                        </tr>
+                        <tr>
+                            <td>Mai/2026</td>
+                            <td>R$ 1.835.000</td>
+                            <td>R$ 458.750</td>
+                            <td>R$ 175.000</td>
+                            <td>R$ 18.750</td>
+                            <td>R$ 12.500</td>
+                            <td>R$ 2.500.000</td>
+                        </tr>
+                        <tr>
+                            <td>Jun/2026</td>
+                            <td>R$ 2.128.600</td>
+                            <td>R$ 532.150</td>
+                            <td>R$ 203.000</td>
+                            <td>R$ 21.750</td>
+                            <td>R$ 14.500</td>
+                            <td>R$ 2.900.000</td>
+                        </tr>
+                        <tr>
+                            <td>Jul/2026</td>
+                            <td>R$ 1.835.000</td>
+                            <td>R$ 458.750</td>
+                            <td>R$ 175.000</td>
+                            <td>R$ 18.750</td>
+                            <td>R$ 12.500</td>
+                            <td>R$ 2.500.000</td>
+                        </tr>
+                        <tr>
+                            <td>Ago/2026</td>
+                            <td>R$ 1.835.000</td>
+                            <td>R$ 458.750</td>
+                            <td>R$ 175.000</td>
+                            <td>R$ 18.750</td>
+                            <td>R$ 12.500</td>
+                            <td>R$ 2.500.000</td>
+                        </tr>
+                        <tr>
+                            <td>Set/2026</td>
+                            <td>R$ 1.321.200</td>
+                            <td>R$ 330.300</td>
+                            <td>R$ 126.000</td>
+                            <td>R$ 13.500</td>
+                            <td>R$ 9.000</td>
+                            <td>R$ 1.800.000</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Total</td>
+                            <td>R$ 10.944.800</td>
+                            <td>R$ 3.156.200</td>
+                            <td>R$ 1.204.000</td>
+                            <td>R$ 129.000</td>
+                            <td>R$ 86.000</td>
+                            <td>R$ 15.520.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 2: Acompanhamento Financeiro -->
+            <div id="tab-acompanhamento" class="tab-content">
+                <!-- Vendas KPIs -->
+                <div class="section-title">Vendas <span class="freq-badge">API Sienge — atualizado em 31/03/2026</span></div>
+                <div class="kpi-grid" style="margin-bottom: 20px;">
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">VENDAS BRUTAS</div>
+                        <div class="kpi-value">244 un. · R$ 116,0M</div>
+                        <div class="kpi-label">Contratos emitidos + distratados desde Out/2021</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">DISTRATOS</div>
+                        <div class="kpi-value">21 un. · R$ 9,0M</div>
+                        <div class="kpi-label">Contratos cancelados no periodo</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">VENDAS LIQUIDAS</div>
+                        <div class="kpi-value">223 un. · R$ 107,0M</div>
+                        <div class="kpi-label">Contratos emitidos · 54,4% das 410 unidades</div>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <h3>Vendas por VGV (R$ M)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chartVendas"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Vendas por Unidade</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chartVso"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recebiveis e Inadimplencia (fonte: API Sienge — parcelas de 223 contratos ativos) -->
+                <div class="section-title">Recebiveis e Inadimplencia <span class="freq-badge">Relatorio Sienge — posicao em 28/02/2026 (correcao ate 28/02/2026)</span></div>
+                <!-- Apenas receita de unidades imobiliarias (excl. banco repasse e avulsos) -->
+                <div class="inadimplencia-kpis">
+                    <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <div class="kpi-badge" style="background: rgba(255,255,255,0.25); color: white;">ATRASO ATUALIZADO</div>
+                        <div class="kpi-value">R$ 2,24M</div>
+                        <div class="kpi-label">237 parcelas · 32 clientes com atraso<br>Valor corrigido + acrescimos (INCC/juros)</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">INDICE</div>
+                        <div class="kpi-value">3,5%</div>
+                        <div class="kpi-label">Vencido / (Vencido + Recebido)<br>R$ 2,2M / R$ 64,6M total faturado</div>
+                    </div>
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">RECEBIMENTO</div>
+                        <div class="kpi-value">R$ 62,4M</div>
+                        <div class="kpi-label">58,3% da carteira recebida<br>de R$ 107,0M total contratado</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">INADIMPLENTES</div>
+                        <div class="kpi-value">20 contratos</div>
+                        <div class="kpi-label">+ 12 em atraso pontual (status Normal)<br>Apenas receita de unidades imobiliarias</div>
+                    </div>
+                </div>
+
+                <!-- Inadimplencia Charts -->
+                <div class="inadimplencia-charts">
+                    <div class="chart-container">
+                        <h3>Aging de Atrasos (valor por faixa)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chartAging"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Maiores Devedores (R$ mil)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chartDefaulters"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evolucao da Obra (fonte: SPE Gaspar fluxo de caixa executado) -->
+                <div class="section-title">Desembolso de Obra <span class="freq-badge">Mensal — fluxo de caixa executado ate Fev/2026</span></div>
+                <div class="kpi-grid" style="margin-bottom: 20px;">
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">TOTAL DA OBRA</div>
+                        <div class="kpi-value">R$ 91,2M</div>
+                        <div class="kpi-label">Obra CC + Manutencao + Av. Gaertner + Clube</div>
+                    </div>
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">DESEMBOLSADO</div>
+                        <div class="kpi-value">R$ 64,6M</div>
+                        <div class="kpi-label">70,8% do total · executado ate Fev/2026</div>
+                    </div>
+                    <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <div class="kpi-badge" style="background: rgba(255,255,255,0.25); color: white;">A DESEMBOLSAR</div>
+                        <div class="kpi-value">R$ 26,6M</div>
+                        <div class="kpi-label">29,2% restante · projetado Mar a Nov/2026</div>
+                    </div>
+                </div>
+                <div class="charts-row-wide">
+                    <div class="chart-container">
+                        <h3>Desembolso Mensal e Acumulado (R$ M)</h3>
+                        <div class="chart-wrapper-wide">
+                            <canvas id="chartObra"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custos por Categoria -->
+                <div class="section-title">Custos por Categoria <span class="freq-badge">Relatório de Apropriações Sienge — até 31/03/2026</span></div>
+                <div class="charts-row">
+                    <div class="hbar-container">
+                        <h3>Marketing — R$ 8,0M (R$ mil)</h3>
+                        <div id="mktBars"></div>
+                    </div>
+                    <div class="hbar-container">
+                        <h3>Gastos com Licenciamento (R$ mil)</h3>
+                        <div id="licBars"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div><!-- /view-seehaus -->
+
+            <!-- ======================== PALACIO DAS AGUAS ======================== -->
+            <div id="view-palacio" style="display: none;">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>Palácio das Águas Home Resort</h1>
+                    <p>Dashboard de Acompanhamento | Idealiza Cidades</p>
+                </div>
+                <div class="header-empreendimento">SPE São Gonçalo</div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn" data-tab="pal-viabilidade" onclick="switchTab('pal-viabilidade')">
+                    Viabilidade Atual
+                </button>
+                <button class="tab-btn active" data-tab="pal-acompanhamento" onclick="switchTab('pal-acompanhamento')">
+                    Acompanhamento Financeiro
+                </button>
+            </div>
+
+            <!-- Tab Viabilidade — em construção -->
+            <div id="tab-pal-viabilidade" class="tab-content">
+                <div style="text-align: center; padding: 80px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🏗️</div>
+                    <h2 style="color: #1e3a5f; margin-bottom: 8px;">Em construção</h2>
+                    <p style="color: #64748b; font-size: 14px;">A aba de viabilidade do Palácio das Águas está sendo preparada.</p>
+                </div>
+            </div>
+
+            <!-- Tab Acompanhamento Financeiro -->
+            <div id="tab-pal-acompanhamento" class="tab-content active">
+                <!-- Vendas KPIs -->
+                <div class="section-title">Vendas <span class="freq-badge">API Sienge — atualizado em 31/03/2026</span></div>
+                <div class="kpi-grid" style="margin-bottom: 20px;">
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">VENDAS BRUTAS</div>
+                        <div class="kpi-value">674 un. · R$ 180,5M</div>
+                        <div class="kpi-label">Contratos emitidos + cancelados desde Set/2018</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">DISTRATOS</div>
+                        <div class="kpi-value">232 un. · R$ 57,0M</div>
+                        <div class="kpi-label">Contratos cancelados no periodo</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">VENDAS LIQUIDAS</div>
+                        <div class="kpi-value">442 un. · R$ 123,5M</div>
+                        <div class="kpi-label">Contratos emitidos · 74,9% das 590 unidades</div>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <h3>Vendas por VGV (R$ M)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="palChartVendas"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Vendas por Unidade</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="palChartVso"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recebiveis e Inadimplencia -->
+                <div class="section-title">Recebíveis e Inadimplência <span class="freq-badge">Relatório Sienge — posição em 31/03/2026 (valores corrigidos INCC + juros)</span></div>
+                <div class="inadimplencia-kpis">
+                    <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <div class="kpi-badge" style="background: rgba(255,255,255,0.25); color: white;">ATRASO ATUALIZADO</div>
+                        <div class="kpi-value">R$ 14,79M</div>
+                        <div class="kpi-label">2.391 parcelas · 151 contratos analisados<br>Valor corrigido (INCC + juros/multa)</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">ÍNDICE</div>
+                        <div class="kpi-value">17,3%</div>
+                        <div class="kpi-label">Vencido / (Vencido + Recebido)<br>R$ 14,8M / R$ 85,3M total faturado</div>
+                    </div>
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">RECEBIMENTO</div>
+                        <div class="kpi-value">R$ 18,4M</div>
+                        <div class="kpi-label">Valor recebido sem acréscimos<br>Relatório Sienge posição 31/03/2026</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">INADIMPLENTES</div>
+                        <div class="kpi-value">132 contratos</div>
+                        <div class="kpi-label">de 151 analisados (19 normais)<br>Saldo devedor total: R$ 34,7M</div>
+                    </div>
+                </div>
+
+                <!-- Inadimplencia Charts -->
+                <div class="inadimplencia-charts">
+                    <div class="chart-container">
+                        <h3>Aging de Atrasos (valor por faixa)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="palChartAging"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Maiores Devedores (R$ mil)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="palChartDefaulters"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custos por Categoria -->
+                <div class="section-title">Custos por Categoria <span class="freq-badge">Em breve — dados sendo processados</span></div>
+                <div style="text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 14px;">
+                    Dados de custos por categoria serão carregados em breve.
+                </div>
+            </div>
+            </div><!-- /view-palacio -->
+
+            <!-- ======================== ESTANCIA FASE 1 ======================== -->
+            <div id="view-estancia1" style="display: none;">
+            <div class="header">
+                <div>
+                    <h1>Estância dos Montes Home Resort — Fase 1</h1>
+                    <p>Dashboard de Acompanhamento | Idealiza Cidades</p>
+                </div>
+                <div class="header-empreendimento">SPE Alpha Santa Maria</div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn" data-tab="e1-viabilidade" onclick="switchTab('e1-viabilidade')">
+                    Viabilidade Atual
+                </button>
+                <button class="tab-btn active" data-tab="e1-acompanhamento" onclick="switchTab('e1-acompanhamento')">
+                    Acompanhamento Financeiro
+                </button>
+            </div>
+
+            <!-- Tab Viabilidade -->
+            <div id="tab-e1-viabilidade" class="tab-content">
+                <div style="text-align: center; padding: 80px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🏗️</div>
+                    <h2 style="color: #1e3a5f; margin-bottom: 8px;">Em construção</h2>
+                    <p style="color: #64748b; font-size: 14px;">A aba de viabilidade da Estância dos Montes Fase 1 está sendo preparada.</p>
+                </div>
+            </div>
+
+            <!-- Tab Acompanhamento -->
+            <div id="tab-e1-acompanhamento" class="tab-content active">
+                <div class="section-title">Vendas <span class="freq-badge">API Sienge — Enterprise 5001 · atualizado em 31/03/2026</span></div>
+                <div class="kpi-grid" style="margin-bottom: 20px;">
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">VENDAS BRUTAS</div>
+                        <div class="kpi-value">483 un. · R$ 151,0M</div>
+                        <div class="kpi-label">Contratos emitidos + cancelados desde Nov/2020</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">DISTRATOS</div>
+                        <div class="kpi-value">23 un. · R$ 7,4M</div>
+                        <div class="kpi-label">Contratos cancelados no período</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">VENDAS LÍQUIDAS</div>
+                        <div class="kpi-value">460 un. · R$ 143,6M</div>
+                        <div class="kpi-label">Contratos emitidos · Ticket médio R$ 312k</div>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <h3>Vendas por VGV (R$ M)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="estF1ChartVendas"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Vendas por Unidade</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="estF1ChartVso"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inadimplencia Fase 1 -->
+                <div class="section-title">Recebíveis e Inadimplência <span class="freq-badge">API Sienge — posição em 31/03/2026 (valores nominais)</span></div>
+                <div class="inadimplencia-kpis">
+                    <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <div class="kpi-badge" style="background: rgba(255,255,255,0.25); color: white;">ATRASO NOMINAL</div>
+                        <div class="kpi-value">R$ 1,41M</div>
+                        <div class="kpi-label">389 parcelas vencidas · 25 contratos com atraso<br>Valor nominal (sem correção INCC/juros)</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">INADIMPLENTES</div>
+                        <div class="kpi-value">25 contratos</div>
+                        <div class="kpi-label">de 460 contratos emitidos<br>5,4% dos contratos ativos</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">PARCELAS VENCIDAS</div>
+                        <div class="kpi-value">389</div>
+                        <div class="kpi-label">Parcelas com saldo e vencimento anterior a 31/03/2026</div>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; margin-bottom: 20px;">
+                    <p style="color: #a16207; font-size: 12px; margin: 0;">⚠️ Valores nominais da API. Para dados corrigidos (INCC + juros/multa), faça upload do PDF "Posição de Inadimplência" do Sienge.</p>
+                </div>
+            </div>
+            </div><!-- /view-estancia1 -->
+
+            <!-- ======================== ESTANCIA FASE 2 ======================== -->
+            <div id="view-estancia2" style="display: none;">
+            <div class="header">
+                <div>
+                    <h1>Estância dos Montes Home Resort — Fase 2</h1>
+                    <p>Dashboard de Acompanhamento | Idealiza Cidades</p>
+                </div>
+                <div class="header-empreendimento">SPE Alpha Santa Maria</div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn" data-tab="e2-viabilidade" onclick="switchTab('e2-viabilidade')">
+                    Viabilidade Atual
+                </button>
+                <button class="tab-btn active" data-tab="e2-acompanhamento" onclick="switchTab('e2-acompanhamento')">
+                    Acompanhamento Financeiro
+                </button>
+            </div>
+
+            <!-- Tab Viabilidade -->
+            <div id="tab-e2-viabilidade" class="tab-content">
+                <div style="text-align: center; padding: 80px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🏗️</div>
+                    <h2 style="color: #1e3a5f; margin-bottom: 8px;">Em construção</h2>
+                    <p style="color: #64748b; font-size: 14px;">A aba de viabilidade da Estância dos Montes Fase 2 está sendo preparada.</p>
+                </div>
+            </div>
+
+            <!-- Tab Acompanhamento -->
+            <div id="tab-e2-acompanhamento" class="tab-content active">
+                <div class="section-title">Vendas <span class="freq-badge">API Sienge — Enterprise 5003 · atualizado em 31/03/2026</span></div>
+                <div class="kpi-grid" style="margin-bottom: 20px;">
+                    <div class="kpi-card green">
+                        <div class="kpi-badge">VENDAS BRUTAS</div>
+                        <div class="kpi-value">348 un. · R$ 150,9M</div>
+                        <div class="kpi-label">Contratos emitidos + cancelados desde Nov/2022</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">DISTRATOS</div>
+                        <div class="kpi-value">44 un. · R$ 21,4M</div>
+                        <div class="kpi-label">Contratos cancelados no período</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">VENDAS LÍQUIDAS</div>
+                        <div class="kpi-value">304 un. · R$ 129,4M</div>
+                        <div class="kpi-label">Contratos emitidos · Ticket médio R$ 426k</div>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <h3>Vendas por VGV (R$ M)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="estF2ChartVendas"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Vendas por Unidade</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="estF2ChartVso"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inadimplencia Fase 2 -->
+                <div class="section-title">Recebíveis e Inadimplência <span class="freq-badge">API Sienge — posição em 31/03/2026 (valores nominais)</span></div>
+                <div class="inadimplencia-kpis">
+                    <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <div class="kpi-badge" style="background: rgba(255,255,255,0.25); color: white;">ATRASO NOMINAL</div>
+                        <div class="kpi-value">R$ 1,76M</div>
+                        <div class="kpi-label">214 parcelas vencidas · 34 contratos com atraso<br>Valor nominal (sem correção INCC/juros)</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-badge">INADIMPLENTES</div>
+                        <div class="kpi-value">34 contratos</div>
+                        <div class="kpi-label">de 304 contratos emitidos<br>11,2% dos contratos ativos</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-badge">PARCELAS VENCIDAS</div>
+                        <div class="kpi-value">214</div>
+                        <div class="kpi-label">Parcelas com saldo e vencimento anterior a 31/03/2026</div>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; margin-bottom: 20px;">
+                    <p style="color: #a16207; font-size: 12px; margin: 0;">⚠️ Valores nominais da API. Para dados corrigidos (INCC + juros/multa), faça upload do PDF "Posição de Inadimplência" do Sienge.</p>
+                </div>
+            </div>
+            </div><!-- /view-estancia2 -->
+
+            <!-- ======================== TODOS ======================== -->
+            <div id="view-todos" style="display: none;">
+            <div class="header">
+                <div>
+                    <h1>Todos os Empreendimentos</h1>
+                    <p>Dashboard de Acompanhamento | Idealiza Cidades</p>
+                </div>
+                <div class="header-empreendimento">Visão Geral</div>
+            </div>
+            <div style="text-align: center; padding: 80px 20px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🏗️</div>
+                <h2 style="color: #1e3a5f; margin-bottom: 8px;">Em construção</h2>
+                <p style="color: #64748b; font-size: 14px;">Selecione um empreendimento no menu lateral para ver seus indicadores.</p>
+            </div>
+            </div><!-- /view-todos -->
+
+        </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div class="chart-modal-overlay" id="chartModal">
+        <div class="chart-modal">
+            <button class="chart-modal-close" onclick="closeChartModal()">&times;</button>
+            <h3 id="chartModalTitle"></h3>
+            <div class="chart-modal-canvas">
+                <canvas id="chartModalCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Arrays — Vendas (fonte: API Sienge, atualizado 2026-03-31)
+        // Apenas contratos Emitidos (exclui Autorizado). Excluido lote FOX (operacao atipica).
+        const vendasLabels = ["2021-10", "2021-11", "2021-12", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2026-01", "2026-02", "2026-03"];
+        const vendasBrutoVgv = [42.725, 3.544, 2.151, 3.247, 0.29, 0.777, 0.393, 1.521, 3.617, 1.228, 0.51, 1.099, 1.191, 0.433, 0.774, 0.835, 0, 0.341, 0.46, 0.398, 0.963, 0.996, 0.597, 0.73, 0.462, 0.602, 1.78, 1.598, 0.686, 4.324, 2.374, 3.196, 1.779, 0.372, 1.583, 1.235, 1.377, 1.104, 0.739, 4.336, 1.478, 3.061, 2.276, 2.829, 1.277, 5.278, 1.752, 0, 1.639];
+        const vendasDistVgv = [0, 0, 0.398, 0, 0, 1.04, 0, 0, 0, 0.262, 0.325, 0, 0.276, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.721, 0, 0, 0, 0.75, 0, 0.89, 1.327, 0.649, 0, 1.536, 0, 0, 0.293, 0];
+        const vendasCumVgv = [42.725, 46.269, 48.022, 51.269, 51.559, 51.296, 51.689, 53.21, 56.827, 57.793, 57.978, 59.077, 59.992, 60.425, 61.199, 62.034, 61.534, 61.875, 62.335, 62.733, 63.696, 64.692, 65.289, 66.019, 66.481, 67.083, 68.863, 70.461, 71.147, 75.471, 77.845, 81.041, 82.82, 83.192, 84.054, 85.289, 86.666, 87.77, 87.759, 92.095, 92.683, 94.417, 96.044, 98.873, 98.614, 103.892, 105.644, 105.351, 106.99];
+        const vendasBrutoUn = [111, 9, 5, 7, 1, 2, 1, 3, 9, 3, 1, 2, 2, 1, 2, 2, 0, 1, 1, 1, 2, 2, 1, 2, 1, 1, 3, 3, 1, 7, 4, 5, 3, 1, 3, 2, 2, 2, 1, 5, 2, 5, 3, 5, 2, 7, 3, 0, 2];
+        const vendasDistUn = [0, 0, 1, 0, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 2, 3, 1, 0, 3, 0, 0, 1, 0];
+        const vendasCumUn = [111, 120, 124, 131, 132, 132, 133, 136, 145, 147, 147, 149, 150, 151, 153, 155, 154, 155, 156, 157, 159, 161, 162, 164, 165, 166, 169, 172, 173, 180, 184, 189, 192, 193, 194, 196, 198, 200, 199, 204, 204, 206, 208, 213, 212, 219, 222, 221, 223];
+
+        // Obra — desembolso mensal (fonte: SPE Gaspar fluxo de caixa executado, linhas 25-28)
+        const obraLabels = ["2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"];
+        const obraExec = [0.67, 0.734, 0.693, 0.165, 0.324, 0.198, 0.636, 0.657, 1.321, 0.51, 1.033, 0.111, 0.491, 0.154, 0.373, 0.852, 0.746, 0.836, 1.764, 1.784, 2.299, 1.461, 2.072, 1.545, 1.926, 1.203, 2.349, 2.381, 1.267, 1.905, 1.522, 0.946, 1.45, 1.659, 0.728, 0.87, 1.378, 1.034, 1.297, 0.998, 1.623, 1.359, 1.061, 1.759, 1.307, 1.196, 1.4, 2.278, 1.517, 1.495, 2.229, 1.775, 1.266, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const obraProj = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5.244, 3.63, 3.63, 3.63, 3.63, 3.63, 2.282, 0.47, 0.47];
+        const obraCum = [0.67, 1.404, 2.097, 2.262, 2.586, 2.784, 3.42, 4.077, 5.398, 5.908, 6.941, 7.052, 7.543, 7.697, 8.07, 8.922, 9.668, 10.504, 12.268, 14.052, 16.351, 17.812, 19.884, 21.429, 23.355, 24.558, 26.907, 29.288, 30.555, 32.46, 33.982, 34.928, 36.378, 38.037, 38.765, 39.635, 41.013, 42.047, 43.344, 44.342, 45.965, 47.324, 48.385, 50.144, 51.451, 52.647, 54.047, 56.325, 57.842, 59.337, 61.566, 63.341, 64.607, 69.851, 73.481, 77.111, 80.741, 84.371, 88.001, 90.283, 90.753, 91.223];
+
+        const cfLabels = ["out/21","nov/21","dez/21","jan/22","fev/22","mar/22","abr/22","mai/22","jun/22","jul/22","ago/22","set/22","out/22","nov/22","dez/22","jan/23","fev/23","mar/23","abr/23","mai/23","jun/23","jul/23","ago/23","set/23","out/23","nov/23","dez/23","jan/24","fev/24","mar/24","abr/24","mai/24","jun/24","jul/24","ago/24","set/24","out/24","nov/24","dez/24","jan/25","fev/25","mar/25","abr/25","mai/25","jun/25","jul/25","ago/25","set/25","out/25","nov/25","dez/25","jan/26","fev/26","mar/26","abr/26","mai/26","jun/26","jul/26","ago/26","set/26","out/26","nov/26","dez/26","jan/27","fev/27","mar/27","abr/27","mai/27","jun/27","jul/27","ago/27","set/27","out/27","nov/27","dez/27","jan/28","fev/28","mar/28","abr/28","mai/28","jun/28","jul/28","ago/28","set/28","out/28","nov/28","dez/28","jan/29","fev/29","mar/29","abr/29","mai/29","jun/29","jul/29","ago/29","set/29","out/29","nov/29","dez/29","jan/30","fev/30","mar/30","abr/30","mai/30","jun/30","jul/30","ago/30","set/30","out/30","nov/30","dez/30","jan/31","fev/31","mar/31"];
+        const cfRec = [6.16,5.49,2.44,0.92,0.96,1.17,0.98,0.82,1.04,0.90,2.10,1.03,1.21,0.94,0.86,1.15,0.94,0.86,0.80,0.97,1.01,1.00,2.45,2.19,3.04,1.59,2.62,3.83,2.33,1.95,15.33,0.91,2.82,2.31,2.10,1.80,1.52,1.67,1.34,1.21,1.62,1.32,1.46,1.95,1.48,2.89,1.69,1.68,1.59,1.37,1.86,1.65,3.42,5.40,4.84,4.06,5.21,7.68,3.98,5.20,1.86,1.59,2.10,2.76,2.12,1.01,1.71,1.72,2.41,2.68,4.07,2.28,1.31,1.47,1.73,1.70,1.35,1.37,1.47,1.58,1.78,1.54,1.58,1.60,1.79,1.70,1.96,1.75,1.81,1.83,1.88,1.95,2.22,2.01,2.05,2.07,2.23,2.17,2.37,2.37,2.28,2.30,2.31,2.51,2.50,2.31,2.31,2.28,2.47,2.30,2.39,2.28,2.30,2.07];
+        const cfDesemb = [2.19,2.59,3.81,0.83,0.64,0.50,1.03,1.02,1.60,0.87,1.32,0.45,1.15,0.62,0.84,1.38,1.20,1.27,2.28,2.23,2.77,2.08,2.64,2.05,2.68,1.63,2.89,2.98,1.76,2.49,2.25,1.65,2.15,2.82,1.66,1.93,2.57,1.84,2.23,1.92,2.43,2.23,2.27,2.65,2.25,2.29,2.34,3.34,2.51,2.59,2.98,2.84,2.28,5.76,4.26,5.71,5.66,5.69,5.71,4.18,2.46,2.32,1.81,1.82,1.76,1.71,1.70,1.63,1.60,1.65,1.58,1.60,1.63,1.44,1.41,1.44,1.36,1.32,1.34,0.10,0.11,0.16,0.11,0.11,0.16,0.12,0.11,0.17,0.11,0.12,0.17,0.12,0.12,0.19,0.12,0.12,0.19,0.13,0.13,0.20,0.14,0.13,0.20,0.13,0.14,0.22,0.13,0.13,0.20,0.14,0.13,0.16,0.08,0.08];
+        const cfSaldo = [4.92,7.81,6.44,6.53,5.12,5.76,5.66,5.46,4.85,4.89,5.53,6.11,6.06,6.38,6.40,6.12,5.86,5.45,3.96,2.70,1.36,0.24,0.05,0.19,0.54,0.36,0.08,0.93,1.50,0.96,13.95,13.20,13.87,13.37,13.81,13.68,12.64,12.46,11.66,10.96,10.15,9.24,8.52,7.81,7.05,7.65,7.01,5.34,4.42,3.20,2.07,0.88,2.02,1.65,2.23,0.58,0.14,2.12,0.40,1.41,0.81,0.08,0.38,1.32,1.68,0.98,0.99,1.08,1.89,2.92,5.41,6.10,5.78,5.82,6.14,6.40,6.39,6.44,6.57,8.05,9.72,11.10,12.58,14.08,15.70,17.29,19.13,20.71,22.41,24.13,25.84,27.67,29.76,31.58,33.51,35.46,37.50,39.54,41.78,43.95,46.09,48.26,50.36,52.74,55.09,57.18,59.35,61.50,63.76,65.92,68.18,70.30,72.52,74.50];
+
+
+        // Marketing — Relatório Analítico de Apropriações por Obra (Sienge), UC 8, Obra 7. Total: R$ 8.010k
+        const mktCats = ["PDV", "Eventos", "Agências e Assessorias", "Mídias", "Viagens", "Honorários PJ", "Manutenção de Vendas", "Maquete", "Campanhas", "Material de Apoio", "Outros"];
+        const mktVals = [2326.1, 1201.7, 1155.0, 1153.6, 654.6, 627.5, 455.1, 155.8, 142.4, 116.0, 22.0];
+        const licCats = ["Estudos urbanisticos e ambientais", "Projetos", "Viagens", "Impostos e taxas", "Laudos", "Honorarios equipe", "Taxas RI", "Despesas adm"];
+        const licVals = [1980.6, 1899.1, 612.5, 159.8, 136.7, 53.9, 3.8, 0.0];
+
+        // ===== PALACIO DAS AGUAS — Vendas (fonte: API Sienge enterprise 5, company 7) =====
+        // Contratos Emitidos + Cancelados. 674 brutos, 232 cancelados, 442 liquidos.
+        const palLabels = ["2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-04","2025-05","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03"];
+        const palBrutoVgv = [25.367,8.534,4.786,1.575,0.535,0.9,1.933,1.86,1.09,1.2,1.132,3.995,1.063,1.154,2.819,1.049,1.115,0.419,0.71,1.423,1.75,0.516,0.976,1.924,3.451,2.411,0.806,1.05,1.036,1.395,1.197,1.337,1.868,1.605,1.68,1.585,1.586,0.272,0.953,2.102,3.545,1.482,0.645,0.978,0.571,2.302,1.563,2.992,9.409,2.456,1.394,1.983,3.521,3.075,14.186,2.448,1.074,2.258,2.471,2.527,2.586,0.29,0.405,0.271,0.807,0.0,0.683,0.27,0.799,0.999,1.444,0.0,0.0,0.368,0.396,1.029,0.272,0.943,0.0,0.751,1.332,3.102,3.109,1.592,1.941,1.559,1.222,1.264];
+        const palDistVgv = [0.0,0.0,0.894,0.0,0.0,0.0,0.904,0.421,0.304,0.272,0.344,0.344,0.506,0.49,0.729,0.51,0.276,0.417,0.0,0.671,0.0,0.0,0.191,0.381,2.063,0.603,1.023,1.169,0.0,0.297,0.811,0.496,0.416,0.882,1.022,0.38,0.217,0.864,0.438,0.535,0.584,3.325,1.897,0.959,1.701,0.948,1.393,0.508,0.962,0.259,0.883,0.877,0.192,0.226,0.612,0.969,0.179,1.395,0.833,0.728,0.918,1.26,0.0,0.924,1.575,1.038,0.0,0.618,1.498,0.387,0.328,0.373,0.217,2.214,0.174,0.366,0.615,1.121,0.669,0.0,1.899,1.91,0.0,0.0,0.0,0.0,0.356,0.232];
+        const palCumVgv = [25.367,33.901,37.793,39.368,39.903,40.803,41.832,43.271,44.057,44.985,45.773,49.424,49.981,50.645,52.735,53.274,54.113,54.115,54.825,55.577,57.327,57.843,58.628,60.171,61.559,63.367,63.15,63.031,64.067,65.165,65.551,66.392,67.844,68.567,69.225,70.43,71.799,71.207,71.722,73.289,76.25,74.407,73.155,73.174,72.044,73.398,73.568,76.052,84.499,86.696,87.207,88.313,91.642,94.491,108.065,109.544,110.439,111.302,112.94,114.739,116.407,115.437,115.842,115.189,114.421,113.383,114.066,113.718,113.019,113.631,114.747,114.374,114.157,112.311,112.533,113.196,112.853,112.675,112.006,112.757,112.19,113.382,116.491,118.083,120.024,121.583,122.449,123.481];
+        const palBrutoUn = [123,40,23,8,3,4,9,9,5,6,5,15,5,5,12,3,3,2,3,5,7,2,4,9,13,8,3,5,4,6,6,6,8,7,7,6,6,1,4,6,12,7,3,4,2,7,7,8,35,9,3,7,12,10,43,7,3,7,7,6,7,1,1,1,2,0,2,1,2,3,3,0,0,1,1,2,1,2,0,2,4,8,8,4,5,2,3,3];
+        const palDistUn = [0,0,3,0,0,0,4,2,2,1,1,1,3,3,3,3,2,3,0,4,0,0,1,3,8,3,4,5,0,1,4,2,2,4,4,2,1,4,2,2,3,13,6,5,8,4,6,2,4,1,3,4,1,1,2,2,1,5,4,3,4,5,0,2,5,4,0,2,3,2,1,1,1,8,1,1,3,4,3,0,6,9,0,0,0,0,1,1];
+        const palCumUn = [123,163,183,191,194,198,203,210,213,218,222,236,238,240,249,249,250,249,252,253,260,262,265,271,276,281,280,280,284,289,291,295,301,304,307,311,316,313,315,319,328,322,319,318,312,315,316,322,353,361,361,364,375,384,425,430,432,434,437,440,443,439,440,439,436,432,434,433,432,433,435,434,433,426,426,427,425,423,420,422,420,419,427,431,436,438,440,442];
+
+        // ===== ESTANCIA DOS MONTES — Fase 1 (Enterprise 5001, CC 5001) =====
+        // 483 brutos, 23 cancelados, 460 líquidos. VGV: Bruto R$ 151.0M, Dist R$ 7.4M, Líq R$ 143.6M
+        const estF1Labels = ["2020-11","2021-02","2021-06","2021-08","2023-08","2023-10","2023-11","2024-02","2024-04","2024-10","2025-04","2025-05","2025-06","2025-07","2025-09","2025-10","2025-12","2026-03"];
+        const estF1BrutoVgv = [0.45,146.243,0.0,0.346,0.0,0.0,0.0,0.0,2.3,0.0,0.01,0.0,0.28,0.475,0.0,0.52,0.0,0.333];
+        const estF1DistVgv = [0.0,0.0,0.305,0.0,0.416,0.241,0.366,0.284,0.0,2.153,0.01,0.245,0.0,0.0,0.984,0.0,2.376,0.0];
+        const estF1CumVgv = [0.45,146.693,146.388,146.734,146.318,146.077,145.711,145.427,147.727,145.574,145.574,145.329,145.609,146.084,145.1,145.62,143.244,143.577];
+        const estF1BrutoUn = [1,473,0,2,0,0,0,0,1,0,1,0,1,1,0,2,0,1];
+        const estF1DistUn = [0,0,2,0,1,1,1,1,0,5,1,1,0,0,4,0,6,0];
+        const estF1CumUn = [1,474,472,474,473,472,471,470,471,466,466,465,466,467,463,465,459,460];
+
+        // ===== ESTANCIA DOS MONTES — Fase 2 (Enterprise 5003, CC 5003) =====
+        // 348 brutos, 44 cancelados, 304 líquidos. VGV: Bruto R$ 150.9M, Dist R$ 21.4M, Líq R$ 129.4M
+        const estF2Labels = ["2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-11","2023-12","2024-04","2024-08","2024-09","2024-10","2025-04","2025-06","2025-07","2025-08","2025-09","2025-10","2026-01","2026-02"];
+        const estF2BrutoVgv = [127.251,0.708,0.0,0.788,10.754,1.244,0.436,1.202,0.0,0.702,0.711,1.712,0.343,0.835,0.0,0.0,0.0,0.0,0.0,0.0,1.739,0.625,0.0,0.712,1.093];
+        const estF2DistVgv = [0.0,0.0,0.339,1.376,1.067,2.025,0.55,0.331,0.688,3.181,0.351,0.0,0.461,0.0,0.277,2.071,1.597,0.436,0.8,1.834,2.698,0.0,1.334,0.0,0.0];
+        const estF2CumVgv = [127.251,127.959,127.62,127.032,136.719,135.938,135.824,136.695,136.007,133.528,133.888,135.6,135.482,136.317,136.04,133.969,132.372,131.936,131.136,129.302,128.343,128.968,127.634,128.346,129.439];
+        const estF2BrutoUn = [294,2,0,2,23,3,1,3,0,2,2,3,1,2,0,0,0,0,0,0,4,1,0,2,3];
+        const estF2DistUn = [0,0,1,3,2,4,1,1,1,6,1,0,1,0,1,4,3,1,2,4,5,0,3,0,0];
+        const estF2CumUn = [294,296,295,294,315,314,314,316,315,311,312,315,315,317,316,312,309,308,306,302,301,302,299,301,304];
+
+        // Chart instances
+        let chartVendas = null;
+        let chartVso = null;
+        let chartObra = null;
+        let chartCashFlow = null;
+        let chartAging = null;
+        let chartDefaulters = null;
+        let palChartVendas = null;
+        let palChartVso = null;
+        let palChartAging = null;
+        let palChartDefaulters = null;
+        let estF1ChartVendas = null;
+        let estF1ChartVso = null;
+        let estF2ChartVendas = null;
+        let estF2ChartVso = null;
+
+        // Password Check (hash-based - password is not stored in plain text)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const expectedHash = 'be3f09a590ff045089dbbe58d15c37cb8f4008aa92d3aa7f5cfedafcf6a9a756';
+            const errorMsg = document.getElementById('passwordError');
+            const inputHash = await hashPassword(input.value);
+
+            if (inputHash === expectedHash) {
+                document.getElementById('passwordOverlay').classList.add('hidden');
+                document.getElementById('mainContainer').style.display = 'block';
+                document.getElementById('sidebar').classList.add('visible');
+                document.getElementById('appWrapper').classList.add('with-sidebar');
+                // Show Seehaus by default
+                document.getElementById('view-seehaus').style.display = 'block';
+                document.getElementById('view-palacio').style.display = 'none';
+                document.getElementById('view-estancia1').style.display = 'none';
+                document.getElementById('view-estancia2').style.display = 'none';
+                document.getElementById('view-todos').style.display = 'none';
+                document.querySelector('[data-empreendimento="seehaus"]').click();
+                initViabCharts();
+            } else {
+                errorMsg.style.display = 'block';
+                input.value = '';
+                setTimeout(() => {
+                    errorMsg.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Allow Enter key to submit password
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+        });
+
+        // Sidebar - Empreendimento selection
+        function selectEmpreendimento(id, btn) {
+            if (btn.disabled) return;
+
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Hide all views
+            document.getElementById('view-seehaus').style.display = 'none';
+            document.getElementById('view-palacio').style.display = 'none';
+            document.getElementById('view-estancia1').style.display = 'none';
+            document.getElementById('view-estancia2').style.display = 'none';
+            document.getElementById('view-todos').style.display = 'none';
+
+            if (id === 'seehaus') {
+                document.getElementById('view-seehaus').style.display = 'block';
+            } else if (id === 'palacio') {
+                document.getElementById('view-palacio').style.display = 'block';
+                setTimeout(() => initPalacioCharts(), 100);
+            } else if (id === 'estancia1') {
+                document.getElementById('view-estancia1').style.display = 'block';
+                setTimeout(() => initEstanciaCharts('F1'), 100);
+            } else if (id === 'estancia2') {
+                document.getElementById('view-estancia2').style.display = 'block';
+                setTimeout(() => initEstanciaCharts('F2'), 100);
+            } else {
+                document.getElementById('view-todos').style.display = 'block';
+            }
+        }
+
+        // Initialize Viability Charts (Tab 1)
+        function initViabCharts() {
+            // Cash Flow Chart
+            const cfCtx = document.getElementById('chartCashFlow');
+            if (cfCtx) {
+                destroyChart(chartCashFlow);
+
+                const gradient = cfCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(29, 78, 216, 0.3)');
+                gradient.addColorStop(1, 'rgba(29, 78, 216, 0)');
+
+                chartCashFlow = new Chart(cfCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: cfLabels,
+                        datasets: [
+                            {
+                                label: 'Receitas',
+                                data: cfRec,
+                                backgroundColor: 'rgba(22, 163, 74, 0.6)',
+                                borderColor: '#16a34a',
+                                borderWidth: 0,
+                                order: 2
+                            },
+                            {
+                                label: 'Desembolsos',
+                                data: cfDesemb,
+                                backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                                borderColor: '#dc2626',
+                                borderWidth: 0,
+                                order: 2
+                            },
+                            {
+                                label: 'Saldo',
+                                data: cfSaldo,
+                                borderColor: '#1d4ed8',
+                                backgroundColor: gradient,
+                                borderWidth: 2,
+                                type: 'line',
+                                tension: 0.3,
+                                fill: true,
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { font: { size: 11 }, usePointStyle: true }
+                            },
+                            tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, titleFont: { size: 11 }, bodyFont: { size: 10 } }
+                        },
+                        scales: {
+                            x: {
+                                stacked: false,
+                                ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 },
+                                grid: { display: false }
+                            },
+                            y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { display: false } }
+                        }
+                    }
+                });
+                chartConfigs['chartCashFlow'] = { type: 'bar', data: chartCashFlow.config.data, options: chartCashFlow.config.options };
+                attachChartClick('chartCashFlow', 'chartCashFlow');
+            }
+        }
+
+        // Initialize Acompanhamento Charts (Tab 2)
+        function initAcompCharts() {
+            // Vendas por VGV Chart (left)
+            const vendasCtx = document.getElementById('chartVendas');
+            if (vendasCtx) {
+                destroyChart(chartVendas);
+                const gradCum = vendasCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+                gradCum.addColorStop(0, 'rgba(29, 78, 216, 0.2)');
+                gradCum.addColorStop(1, 'rgba(29, 78, 216, 0)');
+
+                // Net VGV = bruto - distrato
+                const vendasLiqVgv = vendasBrutoVgv.map((v, i) => Math.round((v - vendasDistVgv[i]) * 1000) / 1000);
+
+                chartVendas = new Chart(vendasCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: vendasLabels,
+                        datasets: [
+                            {
+                                label: 'Venda Bruta (R$ M)',
+                                data: vendasBrutoVgv,
+                                backgroundColor: 'rgba(22, 163, 74, 0.6)',
+                                borderWidth: 0,
+                                order: 3
+                            },
+                            {
+                                label: 'Distrato (R$ M)',
+                                data: vendasDistVgv.map(v => -v),
+                                backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                                borderWidth: 0,
+                                order: 3
+                            },
+                            {
+                                label: 'VGV Liquido Acum. (R$ M)',
+                                data: vendasCumVgv,
+                                borderColor: '#1d4ed8',
+                                backgroundColor: gradCum,
+                                borderWidth: 2,
+                                type: 'line',
+                                tension: 0.3,
+                                fill: true,
+                                yAxisID: 'y1',
+                                pointRadius: 0,
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } },
+                            tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, titleFont: { size: 10 }, bodyFont: { size: 10 } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                            y: { ticks: { font: { size: 9 } }, title: { display: true, text: 'Mensal (R$ M)', font: { size: 10 } }, grid: { display: false } },
+                            y1: { type: 'linear', position: 'right', beginAtZero: true, ticks: { font: { size: 9 } }, title: { display: true, text: 'Acumulado (R$ M)', font: { size: 10 } }, grid: { display: false } }
+                        }
+                    }
+                });
+                chartConfigs['chartVendas'] = { type: 'bar', data: chartVendas.config.data, options: chartVendas.config.options };
+                attachChartClick('chartVendas', 'chartVendas');
+            }
+
+            // Vendas por Unidade Chart (right)
+            const vsoCtx = document.getElementById('chartVso');
+            if (vsoCtx) {
+                destroyChart(chartVso);
+                const gradCumUn = vsoCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+                gradCumUn.addColorStop(0, 'rgba(29, 78, 216, 0.2)');
+                gradCumUn.addColorStop(1, 'rgba(29, 78, 216, 0)');
+
+                chartVso = new Chart(vsoCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: vendasLabels,
+                        datasets: [
+                            {
+                                label: 'Vendas Brutas (un.)',
+                                data: vendasBrutoUn,
+                                backgroundColor: 'rgba(22, 163, 74, 0.6)',
+                                borderWidth: 0,
+                                order: 3
+                            },
+                            {
+                                label: 'Distratos (un.)',
+                                data: vendasDistUn.map(v => -v),
+                                backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                                borderWidth: 0,
+                                order: 3
+                            },
+                            {
+                                label: 'Liquido Acum. (un.)',
+                                data: vendasCumUn,
+                                borderColor: '#1d4ed8',
+                                backgroundColor: gradCumUn,
+                                borderWidth: 2,
+                                type: 'line',
+                                tension: 0.3,
+                                fill: true,
+                                yAxisID: 'y1',
+                                pointRadius: 0,
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } },
+                            tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, titleFont: { size: 10 }, bodyFont: { size: 10 } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                            y: { ticks: { font: { size: 9 } }, title: { display: true, text: 'Mensal (un.)', font: { size: 10 } }, grid: { display: false } },
+                            y1: { type: 'linear', position: 'right', beginAtZero: true, ticks: { font: { size: 9 } }, title: { display: true, text: 'Acumulado (un.)', font: { size: 10 } }, grid: { display: false } }
+                        }
+                    }
+                });
+                chartConfigs['chartVso'] = { type: 'bar', data: chartVso.config.data, options: chartVso.config.options };
+                attachChartClick('chartVso', 'chartVso');
+            }
+
+            // Obra Chart — desembolso mensal (barras exec/proj) + acumulado (linha)
+            const obraCtx = document.getElementById('chartObra');
+            if (obraCtx) {
+                destroyChart(chartObra);
+                chartObra = new Chart(obraCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: obraLabels,
+                        datasets: [
+                            {
+                                label: 'Executado (R$ M)',
+                                data: obraExec,
+                                backgroundColor: '#1d4ed8',
+                                borderRadius: 2,
+                                order: 2,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Projetado (R$ M)',
+                                data: obraProj,
+                                backgroundColor: 'rgba(29,78,216,0.3)',
+                                borderColor: '#1d4ed8',
+                                borderWidth: 1,
+                                borderDash: [3, 3],
+                                borderRadius: 2,
+                                order: 3,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Acumulado (R$ M)',
+                                data: obraCum,
+                                type: 'line',
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(22,163,74,0.08)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 0,
+                                order: 1,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 11 }, usePointStyle: true } },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, mode: 'index', intersect: false,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        if (ctx.raw === 0) return null;
+                                        return ctx.dataset.label + ': R$ ' + ctx.raw.toFixed(1) + 'M';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                            y: { beginAtZero: true, position: 'left', ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'M' }, grid: { display: false }, title: { display: true, text: 'Mensal', font: { size: 9 } } },
+                            y1: { beginAtZero: true, position: 'right', ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'M' }, grid: { display: false }, title: { display: true, text: 'Acumulado', font: { size: 9 } } }
+                        }
+                    }
+                });
+                chartConfigs['chartObra'] = { type: 'bar', data: chartObra.config.data, options: chartObra.config.options };
+                attachChartClick('chartObra', 'chartObra');
+            }
+
+            // Aging Chart — Relatorio Sienge posicao 28/02/2026 (apenas receita unidades imobiliarias)
+            const agingCtx = document.getElementById('chartAging');
+            if (agingCtx) {
+                destroyChart(chartAging);
+                chartAging = new Chart(agingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1-30 dias', '31-90 dias', '91-180 dias', '181-365 dias', '365+ dias'],
+                        datasets: [{
+                            label: 'Valor (R$ mil)',
+                            data: [98.8, 67.6, 288.9, 959.2, 825.9],
+                            backgroundColor: ['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626'],
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Clientes',
+                            data: [14, 4, 5, 5, 4],
+                            backgroundColor: 'rgba(100,116,139,0.4)',
+                            borderColor: '#64748b',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 11 } } },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        if (ctx.datasetIndex === 0) return 'Valor: R$ ' + ctx.raw.toLocaleString('pt-BR') + ' mil';
+                                        return 'Clientes: ' + ctx.raw;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                            y: { beginAtZero: true, position: 'left', ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'k' }, grid: { display: false }, title: { display: true, text: 'Valor (R$ mil)', font: { size: 9 } } },
+                            y1: { beginAtZero: true, position: 'right', ticks: { font: { size: 9 } }, grid: { display: false }, title: { display: true, text: 'Clientes', font: { size: 9 } } }
+                        }
+                    }
+                });
+                chartConfigs['chartAging'] = { type: 'bar', data: chartAging.config.data, options: chartAging.config.options };
+                attachChartClick('chartAging', 'chartAging');
+            }
+
+            // Defaulters Chart — Relatorio Sienge posicao 28/02/2026 (apenas receita unidades imobiliarias)
+            const defaultersCtx = document.getElementById('chartDefaulters');
+            if (defaultersCtx) {
+                destroyChart(chartDefaulters);
+                chartDefaulters = new Chart(defaultersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            'Casa & Cozinha (K05)',
+                            'Mila Mello Pires (E16)',
+                            'R. Isse Costa (I04)',
+                            'Vagner da Silva (D18)',
+                            'R. Cassio Assess. (C07)',
+                            'Dayana Schmitt (U17)',
+                            'Suelen Ferreira (P31)',
+                            'Suelen Ferreira (A01)',
+                            'Gamaliel Borges (C09)',
+                            'G. Luzardo (E13)'
+                        ],
+                        datasets: [{
+                            label: 'Atraso Atualizado (R$ mil)',
+                            data: [683.1, 297.6, 278.3, 158.5, 127.8, 122.2, 106.5, 88.1, 61.3, 47.5],
+                            backgroundColor: ['#dc2626','#dc2626','#dc2626','#ef4444','#ef4444','#ef4444','#f97316','#f97316','#fbbf24','#fbbf24'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        return 'R$ ' + ctx.raw.toLocaleString('pt-BR') + ' mil';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'k' }, grid: { display: false } },
+                            y: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                        }
+                    }
+                });
+                chartConfigs['chartDefaulters'] = { type: 'bar', data: chartDefaulters.config.data, options: chartDefaulters.config.options };
+                attachChartClick('chartDefaulters', 'chartDefaulters');
+            }
+
+            // Render horizontal bars for Marketing
+            renderHorizontalBars('mktBars', mktCats, mktVals, 'blue-gradient');
+
+            // Render horizontal bars for Licenciamento
+            renderHorizontalBars('licBars', licCats, licVals, 'amber-gradient');
+        }
+
+        // Render Horizontal Bar Charts
+        function renderHorizontalBars(containerId, categories, values, gradientClass) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const maxVal = Math.max(...values);
+
+            categories.forEach((cat, idx) => {
+                const val = values[idx];
+                const pct = Math.max((val / maxVal) * 100, 3);
+
+                const hbar = document.createElement('div');
+                hbar.className = 'hbar';
+
+                const label = document.createElement('div');
+                label.className = 'hbar-label';
+                label.textContent = cat;
+
+                const track = document.createElement('div');
+                track.className = 'hbar-track';
+                track.style.display = 'flex';
+                track.style.alignItems = 'center';
+
+                const bar = document.createElement('div');
+                bar.className = `hbar-bar ${gradientClass}`;
+                bar.style.width = pct + '%';
+
+                const value = document.createElement('div');
+                value.className = 'hbar-value';
+                // Format: >= 1000 → "1.201,7" / < 1000 → "155,8"
+                const formatted = val >= 1000
+                    ? val.toFixed(1).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                    : val.toFixed(1).replace('.', ',');
+                value.textContent = formatted;
+
+                track.appendChild(bar);
+                track.appendChild(value);
+                hbar.appendChild(label);
+                hbar.appendChild(track);
+                container.appendChild(hbar);
+            });
+        }
+
+        // Destroy Chart
+        function destroyChart(chart) {
+            if (chart) {
+                chart.destroy();
+            }
+        }
+
+        // ===== Chart Modal (expand on click) =====
+        let modalChart = null;
+
+        function openChartModal(title, chartConfig) {
+            document.getElementById('chartModalTitle').textContent = title;
+            document.getElementById('chartModal').classList.add('active');
+
+            if (modalChart) { modalChart.destroy(); modalChart = null; }
+
+            const ctx = document.getElementById('chartModalCanvas');
+            // Deep clone config and enable data labels
+            const expandedConfig = JSON.parse(JSON.stringify(chartConfig));
+
+            // Show data labels on the expanded version
+            if (!expandedConfig.plugins) expandedConfig.plugins = [];
+
+            // Enable point labels for line datasets, bar labels for bar datasets
+            expandedConfig.data.datasets.forEach(ds => {
+                if (ds.type === 'line' || (!ds.type && expandedConfig.type === 'line')) {
+                    ds.pointRadius = 3;
+                    ds.pointHoverRadius = 6;
+                }
+            });
+
+            // Add datalabels-like behavior via tooltip mode
+            expandedConfig.options = expandedConfig.options || {};
+            expandedConfig.options.responsive = true;
+            expandedConfig.options.maintainAspectRatio = false;
+            expandedConfig.options.plugins = expandedConfig.options.plugins || {};
+            expandedConfig.options.plugins.tooltip = {
+                backgroundColor: 'rgba(0,0,0,0.85)',
+                padding: 14,
+                titleFont: { size: 13 },
+                bodyFont: { size: 12 },
+                mode: 'index',
+                intersect: false
+            };
+            expandedConfig.options.plugins.legend = {
+                display: true,
+                position: 'top',
+                labels: { font: { size: 12 }, usePointStyle: true, padding: 16 }
+            };
+
+            // Larger fonts on axes
+            if (expandedConfig.options.scales) {
+                Object.values(expandedConfig.options.scales).forEach(scale => {
+                    if (scale.ticks) scale.ticks.font = { size: 11 };
+                    if (scale.title) scale.title.font = { size: 12 };
+                    scale.grid = { display: false };
+                });
+            }
+
+            // Recreate gradients if needed (gradients can't be serialized)
+            expandedConfig.data.datasets.forEach(ds => {
+                if (ds.backgroundColor && typeof ds.backgroundColor === 'object') {
+                    // Replaced by solid transparent
+                    if (ds.type === 'line') {
+                        ds.backgroundColor = 'rgba(29, 78, 216, 0.08)';
+                    }
+                }
+            });
+
+            modalChart = new Chart(ctx, expandedConfig);
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').classList.remove('active');
+            if (modalChart) { modalChart.destroy(); modalChart = null; }
+        }
+
+        // Close on Escape or clicking overlay
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeChartModal();
+        });
+        document.getElementById('chartModal').addEventListener('click', function(e) {
+            if (e.target === this) closeChartModal();
+        });
+
+        // Store chart configs for modal re-creation
+        const chartConfigs = {};
+
+        // Attach click handlers to all chart containers
+        function attachChartClick(containerId, configKey) {
+            const container = document.getElementById(configKey)?.closest('.chart-container');
+            if (!container) return;
+            container.addEventListener('click', function() {
+                const title = container.querySelector('h3')?.textContent || '';
+                if (chartConfigs[configKey]) {
+                    openChartModal(title, chartConfigs[configKey]);
+                }
+            });
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Determine which view we're in
+            const isPal = tabName.startsWith('pal-');
+            const isE1 = tabName.startsWith('e1-');
+            const isE2 = tabName.startsWith('e2-');
+            let parentView;
+            if (isPal) parentView = document.getElementById('view-palacio');
+            else if (isE1) parentView = document.getElementById('view-estancia1');
+            else if (isE2) parentView = document.getElementById('view-estancia2');
+            else parentView = document.getElementById('view-seehaus');
+
+            parentView.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            parentView.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            parentView.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+
+            if (tabName === 'acompanhamento') {
+                setTimeout(() => initAcompCharts(), 100);
+            }
+            if (tabName === 'pal-acompanhamento') {
+                setTimeout(() => initPalacioCharts(), 100);
+            }
+            if (tabName === 'e1-acompanhamento') {
+                setTimeout(() => initEstanciaCharts('F1'), 100);
+            }
+            if (tabName === 'e2-acompanhamento') {
+                setTimeout(() => initEstanciaCharts('F2'), 100);
+            }
+        }
+
+        // Initialize Palacio Charts
+        function initPalacioCharts() {
+            const ctx1 = document.getElementById('palChartVendas');
+            const ctx2 = document.getElementById('palChartVso');
+            if (!ctx1 || !ctx2) return;
+
+            // Destroy existing
+            if (palChartVendas) { palChartVendas.destroy(); palChartVendas = null; }
+            if (palChartVso) { palChartVso.destroy(); palChartVso = null; }
+
+            // Vendas VGV chart
+            const grad1 = ctx1.getContext('2d').createLinearGradient(0, 0, 0, 300);
+            grad1.addColorStop(0, 'rgba(22, 163, 74, 0.3)');
+            grad1.addColorStop(1, 'rgba(22, 163, 74, 0)');
+
+            palChartVendas = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: palLabels,
+                    datasets: [
+                        { label: 'Acum. (R$ M)', data: palCumVgv, borderColor: '#16a34a', backgroundColor: grad1, borderWidth: 2, type: 'line', tension: 0.3, fill: true, yAxisID: 'y1', order: 1 },
+                        { label: 'Venda Bruta (R$ M)', data: palBrutoVgv, backgroundColor: 'rgba(29, 78, 216, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 },
+                        { label: 'Distrato (R$ M)', data: palDistVgv, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 } },
+                    scales: {
+                        x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                        y: { position: 'left', ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y1: { position: 'right', ticks: { font: { size: 10 } }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            // Vendas Unidades chart
+            const grad2 = ctx2.getContext('2d').createLinearGradient(0, 0, 0, 300);
+            grad2.addColorStop(0, 'rgba(22, 163, 74, 0.3)');
+            grad2.addColorStop(1, 'rgba(22, 163, 74, 0)');
+
+            palChartVso = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: palLabels,
+                    datasets: [
+                        { label: 'Liquido Acum. (un.)', data: palCumUn, borderColor: '#16a34a', backgroundColor: grad2, borderWidth: 2, type: 'line', tension: 0.3, fill: true, yAxisID: 'y1', order: 1 },
+                        { label: 'Vendas Brutas (un.)', data: palBrutoUn, backgroundColor: 'rgba(29, 78, 216, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 },
+                        { label: 'Distratos (un.)', data: palDistUn, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 } },
+                    scales: {
+                        x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                        y: { position: 'left', ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y1: { position: 'right', ticks: { font: { size: 10 } }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            // Palacio Aging Chart — Relatório Sienge posição 31/03/2026
+            const palAgingCtx = document.getElementById('palChartAging');
+            if (palAgingCtx) {
+                if (palChartAging) { palChartAging.destroy(); palChartAging = null; }
+                palChartAging = new Chart(palAgingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1-30 dias', '31-90 dias', '91-180 dias', '181-365 dias', '365+ dias'],
+                        datasets: [{
+                            label: 'Valor (R$ mil)',
+                            data: [82.9, 375.5, 987.0, 1137.6, 12160.6],
+                            backgroundColor: ['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626'],
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Contratos',
+                            data: [19, 25, 21, 16, 70],
+                            backgroundColor: 'rgba(100,116,139,0.4)',
+                            borderColor: '#64748b',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 11 } } },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        if (ctx.datasetIndex === 0) return 'Valor: R$ ' + ctx.raw.toLocaleString('pt-BR') + ' mil';
+                                        return 'Contratos: ' + ctx.raw;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                            y: { beginAtZero: true, position: 'left', ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'k' }, grid: { display: false }, title: { display: true, text: 'Valor (R$ mil)', font: { size: 9 } } },
+                            y1: { beginAtZero: true, position: 'right', ticks: { font: { size: 9 } }, grid: { display: false }, title: { display: true, text: 'Contratos', font: { size: 9 } } }
+                        }
+                    }
+                });
+                chartConfigs['palChartAging'] = { type: 'bar', data: palChartAging.config.data, options: palChartAging.config.options };
+                attachChartClick('palChartAging', 'palChartAging');
+            }
+
+            // Palacio Top Devedores Chart — Relatório Sienge posição 31/03/2026
+            const palDefCtx = document.getElementById('palChartDefaulters');
+            if (palDefCtx) {
+                if (palChartDefaulters) { palChartDefaulters.destroy(); palChartDefaulters = null; }
+                palChartDefaulters = new Chart(palDefCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            'Xie Ping (Q17L7)',
+                            'P. Raphael Melo (Q17L22)',
+                            'A. Filipe Paixão (Q8L32)',
+                            'C. Viviane Oliveira (Q16L36)',
+                            'J. Chegalski Costa (Q13L56)',
+                            'A. Araujo Castro (Q16L37)',
+                            'P. Raphael Melo (Q17L30)',
+                            'S. Pimentel Santos (Q15L15)',
+                            'Terra Bella (Q2L14)',
+                            'Terra Bella (Q2L15)'
+                        ],
+                        datasets: [{
+                            label: 'Atraso Atualizado (R$ mil)',
+                            data: [648.1, 455.6, 399.6, 340.4, 332.0, 321.2, 300.5, 292.0, 283.7, 283.7],
+                            backgroundColor: ['#dc2626','#dc2626','#dc2626','#ef4444','#ef4444','#ef4444','#f97316','#f97316','#fbbf24','#fbbf24'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        return 'R$ ' + ctx.raw.toLocaleString('pt-BR') + ' mil';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => 'R$' + v + 'k' }, grid: { display: false } },
+                            y: { ticks: { font: { size: 8 } }, grid: { display: false } }
+                        }
+                    }
+                });
+                chartConfigs['palChartDefaulters'] = { type: 'bar', data: palChartDefaulters.config.data, options: palChartDefaulters.config.options };
+                attachChartClick('palChartDefaulters', 'palChartDefaulters');
+            }
+        }
+
+        // ===== Estância dos Montes Charts =====
+        function initEstanciaCharts(phase) {
+            // Helper to create vendas chart pair (VGV + Unidades)
+            function createVendasPair(prefix, labels, brutoVgv, distVgv, cumVgv, brutoUn, distUn, cumUn) {
+                const ctx1 = document.getElementById(prefix + 'ChartVendas');
+                const ctx2 = document.getElementById(prefix + 'ChartVso');
+                if (!ctx1 || !ctx2) return;
+
+                // Destroy existing
+                const vKey = prefix + 'ChartVendas';
+                const uKey = prefix + 'ChartVso';
+                var existing1 = Chart.getChart(ctx1);
+                if (existing1) existing1.destroy();
+                var existing2 = Chart.getChart(ctx2);
+                if (existing2) existing2.destroy();
+
+                // VGV chart
+                const grad1 = ctx1.getContext('2d').createLinearGradient(0, 0, 0, 300);
+                grad1.addColorStop(0, 'rgba(22, 163, 74, 0.3)');
+                grad1.addColorStop(1, 'rgba(22, 163, 74, 0)');
+
+                window[vKey] = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Acum. (R$ M)', data: cumVgv, borderColor: '#16a34a', backgroundColor: grad1, borderWidth: 2, type: 'line', tension: 0.3, fill: true, yAxisID: 'y1', order: 1 },
+                            { label: 'Venda Bruta (R$ M)', data: brutoVgv, backgroundColor: 'rgba(29, 78, 216, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 },
+                            { label: 'Distrato (R$ M)', data: distVgv, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 } },
+                        scales: {
+                            x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                            y: { position: 'left', ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            y1: { position: 'right', ticks: { font: { size: 10 } }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+                chartConfigs[vKey] = { type: 'bar', data: window[vKey].config.data, options: window[vKey].config.options };
+                attachChartClick(vKey, vKey);
+
+                // Unidades chart
+                const grad2 = ctx2.getContext('2d').createLinearGradient(0, 0, 0, 300);
+                grad2.addColorStop(0, 'rgba(22, 163, 74, 0.3)');
+                grad2.addColorStop(1, 'rgba(22, 163, 74, 0)');
+
+                window[uKey] = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Líquido Acum. (un.)', data: cumUn, borderColor: '#16a34a', backgroundColor: grad2, borderWidth: 2, type: 'line', tension: 0.3, fill: true, yAxisID: 'y1', order: 1 },
+                            { label: 'Vendas Brutas (un.)', data: brutoUn, backgroundColor: 'rgba(29, 78, 216, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 },
+                            { label: 'Distratos (un.)', data: distUn, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderWidth: 0, yAxisID: 'y', order: 2 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 } },
+                        scales: {
+                            x: { ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                            y: { position: 'left', ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            y1: { position: 'right', ticks: { font: { size: 10 } }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+                chartConfigs[uKey] = { type: 'bar', data: window[uKey].config.data, options: window[uKey].config.options };
+                attachChartClick(uKey, uKey);
+            }
+
+            if (phase === 'F1') {
+                createVendasPair('estF1', estF1Labels, estF1BrutoVgv, estF1DistVgv, estF1CumVgv, estF1BrutoUn, estF1DistUn, estF1CumUn);
+            } else if (phase === 'F2') {
+                createVendasPair('estF2', estF2Labels, estF2BrutoVgv, estF2DistVgv, estF2CumVgv, estF2BrutoUn, estF2DistUn, estF2CumUn);
+            }
+        }
+    </script>
+</body>
+</html>
